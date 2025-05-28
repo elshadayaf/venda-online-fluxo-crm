@@ -2,7 +2,8 @@
 import {
   BarChart3,
   Home,
-  Package
+  Package,
+  TrendingUp
 } from "lucide-react";
 import {
   Sidebar,
@@ -27,6 +28,11 @@ const menuItems = [
     title: "Pedidos",
     url: "/pedidos",
     icon: Package,
+  },
+  {
+    title: "Taxas e ROI",
+    url: "/taxas-roi",
+    icon: TrendingUp,
   },
 ];
 

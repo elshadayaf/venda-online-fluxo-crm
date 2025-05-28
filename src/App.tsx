@@ -8,6 +8,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Pedidos from "./pages/Pedidos";
+import TaxasROI from "./pages/TaxasROI";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -35,6 +36,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Pedidos />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/taxas-roi" 
+              element={
+                <ProtectedRoute>
+                  <TaxasROI />
                 </ProtectedRoute>
               } 
             />
