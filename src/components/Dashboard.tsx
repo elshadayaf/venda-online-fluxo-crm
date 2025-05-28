@@ -3,6 +3,7 @@ import { useState } from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { MetricCards } from "@/components/MetricCards";
 import { SalesChart } from "@/components/SalesChart";
+import { HourlySalesChart } from "@/components/HourlySalesChart";
 import { PaymentMethodChart } from "@/components/PaymentMethodChart";
 import { RecentSales } from "@/components/RecentSales";
 import { FilterTabs } from "@/components/FilterTabs";
@@ -78,6 +79,11 @@ export function Dashboard() {
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <SalesChart selectedPeriod={selectedPeriod} />
+        <HourlySalesChart selectedPeriod={selectedPeriod} />
+      </div>
+
+      {/* Second Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <PaymentMethodChart selectedPeriod={selectedPeriod} />
       </div>
 
