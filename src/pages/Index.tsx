@@ -6,7 +6,7 @@ import { Dashboard } from "@/components/Dashboard";
 const Index = () => {
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gray-50">
+      <div className="min-h-screen flex w-full bg-black">
         <AppSidebar />
         <main className="flex-1 overflow-auto">
           <Dashboard />

@@ -63,20 +63,20 @@ const menuItems = [
 
 export function AppSidebar() {
   return (
-    <Sidebar className="border-r bg-white">
-      <SidebarHeader className="p-6 border-b">
+    <Sidebar className="border-r border-gray-800 bg-gray-900">
+      <SidebarHeader className="p-6 border-b border-gray-800">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+          <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
             <BarChart3 className="w-5 h-5 text-white" />
           </div>
-          <span className="font-bold text-xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <span className="font-bold text-xl bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
             SalesHub
           </span>
         </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3">
+          <SidebarGroupLabel className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3">
             Menu Principal
           </SidebarGroupLabel>
           <SidebarGroupContent className="mt-2">
@@ -85,7 +85,7 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton 
                     asChild 
-                    className="w-full justify-start gap-3 px-3 py-2.5 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                    className="w-full justify-start gap-3 px-3 py-2.5 hover:bg-gray-800 hover:text-orange-400 transition-colors text-gray-300"
                   >
                     <a href={item.url}>
                       <item.icon className="w-5 h-5" />

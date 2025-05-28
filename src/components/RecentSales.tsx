@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -54,11 +53,11 @@ export function RecentSales() {
 
   const getStatusBadge = (status: string) => {
     return status === "pago" ? (
-      <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+      <Badge className="bg-green-900 text-green-300 hover:bg-green-900 border-green-700">
         Pago
       </Badge>
     ) : (
-      <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100">
+      <Badge className="bg-orange-900 text-orange-300 hover:bg-orange-900 border-orange-700">
         Pendente
       </Badge>
     );
@@ -66,37 +65,37 @@ export function RecentSales() {
 
   const getMethodColor = (method: string) => {
     switch (method) {
-      case "PIX": return "text-green-600";
-      case "Cartão": return "text-blue-600";
-      case "Boleto": return "text-orange-600";
-      default: return "text-gray-600";
+      case "PIX": return "text-green-400";
+      case "Cartão": return "text-cyan-400";
+      case "Boleto": return "text-orange-400";
+      default: return "text-gray-400";
     }
   };
 
   return (
-    <Card>
+    <Card className="bg-gray-900 border-gray-800">
       <CardHeader>
-        <CardTitle>Vendas Recentes</CardTitle>
+        <CardTitle className="text-white">Vendas Recentes</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           {recentSales.map((sale) => (
-            <div key={sale.id} className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
+            <div key={sale.id} className="flex items-center justify-between p-4 border border-gray-800 rounded-lg hover:bg-gray-800 transition-colors">
               <div className="flex items-center gap-4">
                 <Avatar>
-                  <AvatarFallback className="bg-blue-100 text-blue-600">
+                  <AvatarFallback className="bg-orange-900 text-orange-300">
                     {sale.customer.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <div className="font-medium text-gray-900">{sale.customer}</div>
-                  <div className="text-sm text-gray-500">{sale.email}</div>
-                  <div className="text-xs text-gray-400">{sale.id} • {sale.time}</div>
+                  <div className="font-medium text-white">{sale.customer}</div>
+                  <div className="text-sm text-gray-400">{sale.email}</div>
+                  <div className="text-xs text-gray-500">{sale.id} • {sale.time}</div>
                 </div>
               </div>
               
               <div className="text-right space-y-2">
-                <div className="font-semibold text-gray-900">{sale.amount}</div>
+                <div className="font-semibold text-white">{sale.amount}</div>
                 <div className="flex items-center gap-2">
                   {getStatusBadge(sale.status)}
                   <span className={`text-xs font-medium ${getMethodColor(sale.method)}`}>

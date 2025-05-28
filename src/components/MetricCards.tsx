@@ -35,7 +35,7 @@ export function MetricCards({ selectedPeriod }: MetricCardsProps) {
     },
   };
 
-  const currentData = metrics[selectedPeriod] || metrics.today;
+  const currentData = metrics[selectedPeriod as keyof typeof metrics] || metrics.today;
 
   const cards = [
     {
@@ -44,7 +44,7 @@ export function MetricCards({ selectedPeriod }: MetricCardsProps) {
       change: currentData.totalSales.change,
       trend: currentData.totalSales.trend,
       icon: DollarSign,
-      color: "from-blue-500 to-blue-600",
+      color: "from-orange-500 to-orange-600",
     },
     {
       title: "Vendas Pagas",
@@ -52,7 +52,7 @@ export function MetricCards({ selectedPeriod }: MetricCardsProps) {
       change: currentData.paidSales.change,
       trend: currentData.paidSales.trend,
       icon: ShoppingCart,
-      color: "from-green-500 to-green-600",
+      color: "from-cyan-400 to-cyan-500",
     },
     {
       title: "Vendas Pendentes",
@@ -60,7 +60,7 @@ export function MetricCards({ selectedPeriod }: MetricCardsProps) {
       change: currentData.pendingSales.change,
       trend: currentData.pendingSales.trend,
       icon: Clock,
-      color: "from-orange-500 to-orange-600",
+      color: "from-yellow-400 to-yellow-500",
     },
     {
       title: "Taxa de Conversão",
@@ -75,9 +75,9 @@ export function MetricCards({ selectedPeriod }: MetricCardsProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {cards.map((card, index) => (
-        <Card key={index} className="overflow-hidden hover:shadow-lg transition-shadow">
+        <Card key={index} className="overflow-hidden hover:shadow-2xl transition-shadow bg-gray-900 border-gray-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600">
+            <CardTitle className="text-sm font-medium text-gray-400">
               {card.title}
             </CardTitle>
             <div className={`p-2 rounded-lg bg-gradient-to-r ${card.color}`}>
@@ -85,16 +85,16 @@ export function MetricCards({ selectedPeriod }: MetricCardsProps) {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900 mb-2">
+            <div className="text-2xl font-bold text-white mb-2">
               {card.value}
             </div>
             <div className="flex items-center text-sm">
               {card.trend === "up" ? (
-                <ArrowUp className="w-4 h-4 text-green-500 mr-1" />
+                <ArrowUp className="w-4 h-4 text-green-400 mr-1" />
               ) : (
-                <ArrowDown className="w-4 h-4 text-red-500 mr-1" />
+                <ArrowDown className="w-4 h-4 text-red-400 mr-1" />
               )}
-              <span className={card.trend === "up" ? "text-green-600" : "text-red-600"}>
+              <span className={card.trend === "up" ? "text-green-400" : "text-red-400"}>
                 {card.change}
               </span>
               <span className="text-gray-500 ml-1">vs período anterior</span>

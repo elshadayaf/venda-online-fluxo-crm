@@ -42,67 +42,68 @@ export function SalesChart({ selectedPeriod }: SalesChartProps) {
     ],
   };
 
-  const data = chartData[selectedPeriod] || chartData.today;
+  const data = chartData[selectedPeriod as keyof typeof chartData] || chartData.today;
 
   return (
-    <Card>
+    <Card className="bg-gray-900 border-gray-800">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+        <CardTitle className="flex items-center gap-2 text-white">
+          <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
           Evolução de Vendas
         </CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
             <XAxis 
               dataKey="time" 
-              stroke="#6b7280"
+              stroke="#9ca3af"
               fontSize={12}
             />
             <YAxis 
-              stroke="#6b7280"
+              stroke="#9ca3af"
               fontSize={12}
             />
             <Tooltip 
               contentStyle={{
-                backgroundColor: "white",
-                border: "1px solid #e5e7eb",
+                backgroundColor: "#1f2937",
+                border: "1px solid #374151",
                 borderRadius: "8px",
-                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.3)",
+                color: "#ffffff"
               }}
               formatter={(value, name) => [
-                name === "vendas" ? `${value} vendas` : `R$ ${value.toLocaleString()}`,
+                name === "vendas" ? `${value} vendas` : `R$ ${(value as number).toLocaleString()}`,
                 name === "vendas" ? "Vendas" : "Faturamento"
               ]}
             />
             <Line 
               type="monotone" 
               dataKey="vendas" 
-              stroke="#3b82f6" 
+              stroke="#ff6b35" 
               strokeWidth={3}
-              dot={{ fill: "#3b82f6", strokeWidth: 2, r: 4 }}
-              activeDot={{ r: 6, stroke: "#3b82f6", strokeWidth: 2 }}
+              dot={{ fill: "#ff6b35", strokeWidth: 2, r: 4 }}
+              activeDot={{ r: 6, stroke: "#ff6b35", strokeWidth: 2 }}
             />
             <Line 
               type="monotone" 
               dataKey="faturamento" 
-              stroke="#10b981" 
+              stroke="#00d4ff" 
               strokeWidth={3}
-              dot={{ fill: "#10b981", strokeWidth: 2, r: 4 }}
-              activeDot={{ r: 6, stroke: "#10b981", strokeWidth: 2 }}
+              dot={{ fill: "#00d4ff", strokeWidth: 2, r: 4 }}
+              activeDot={{ r: 6, stroke: "#00d4ff", strokeWidth: 2 }}
             />
           </LineChart>
         </ResponsiveContainer>
         <div className="flex justify-center gap-6 mt-4">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-            <span className="text-sm text-gray-600">Vendas</span>
+            <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+            <span className="text-sm text-gray-400">Vendas</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-            <span className="text-sm text-gray-600">Faturamento (R$)</span>
+            <div className="w-3 h-3 bg-cyan-400 rounded-full"></div>
+            <span className="text-sm text-gray-400">Faturamento (R$)</span>
           </div>
         </div>
       </CardContent>

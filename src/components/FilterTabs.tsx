@@ -16,7 +16,7 @@ const periods = [
 
 export function FilterTabs({ selectedPeriod, onPeriodChange }: FilterTabsProps) {
   return (
-    <div className="flex items-center gap-2 p-1 bg-gray-100 rounded-lg w-fit">
+    <div className="flex items-center gap-2 p-1 bg-gray-900 rounded-lg w-fit border border-gray-800">
       {periods.map((period) => (
         <Button
           key={period.id}
@@ -25,8 +25,8 @@ export function FilterTabs({ selectedPeriod, onPeriodChange }: FilterTabsProps) 
           onClick={() => onPeriodChange(period.id)}
           className={`flex items-center gap-2 transition-all ${
             selectedPeriod === period.id
-              ? "bg-white shadow-sm text-blue-600"
-              : "text-gray-600 hover:text-gray-900"
+              ? "bg-orange-600 shadow-sm text-white hover:bg-orange-500"
+              : "text-gray-400 hover:text-white hover:bg-gray-800"
           }`}
         >
           <period.icon className="w-4 h-4" />
