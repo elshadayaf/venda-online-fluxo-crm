@@ -24,29 +24,48 @@ export const useOrderMetrics = (selectedPeriod: string) => {
 
     // Log detalhado dos pedidos para debug
     orders.forEach((order, index) => {
-      console.log(`Pedido ${index + 1}:`, {
-        id: order.external_id,
+      const rawAmount = order.amount;
+      const numericAmount = Number(order.amount);
+      
+      // Verificar se o valor parece estar em centavos (número inteiro >= 1000)
+      const isLikelyCents = Number.isInteger(numericAmount) && numericAmount >= 1000;
+      const correctedAmount = isLikelyCents ? numericAmount / 100 : numericAmount;
+      
+      console.log(`🔍 Pedido ${index + 1} (${order.external_id}):`, {
         customer_name: order.customer_name,
-        amount: order.amount,
+        raw_amount: rawAmount,
+        numeric_amount: numericAmount,
+        is_likely_cents: isLikelyCents,
+        corrected_amount: correctedAmount,
         status: order.status,
-        payment_method: order.payment_method
+        payment_method: order.payment_method,
+        created_at: order.created_at
       });
     });
 
     const totalOrders = orders.length;
     
-    // Calcula receita total considerando valores válidos
+    // Calcula receita total com correção automática para valores em centavos
     const totalRevenue = orders.reduce((sum, order) => {
       const amount = Number(order.amount) || 0;
-      console.log(`Somando valor do pedido ${order.external_id}: ${amount}`);
-      return sum + amount;
+      
+      // Se o valor parece estar em centavos (número inteiro >= 1000), converte
+      const correctedAmount = (Number.isInteger(amount) && amount >= 1000) ? amount / 100 : amount;
+      
+      console.log(`💰 Processando valor do pedido ${order.external_id}:`, {
+        original: amount,
+        corrected: correctedAmount,
+        was_converted: (Number.isInteger(amount) && amount >= 1000)
+      });
+      
+      return sum + correctedAmount;
     }, 0);
     
-    console.log('💰 Receita total calculada:', totalRevenue);
+    console.log('💰 Receita total calculada (após correções):', totalRevenue);
     
     const paidOrdersArray = orders.filter(order => {
       const isPaid = isPaidStatus(order.status);
-      console.log(`Pedido ${order.external_id} - Status: ${order.status}, É pago?: ${isPaid}`);
+      console.log(`✅ Pedido ${order.external_id} - Status: ${order.status}, É pago?: ${isPaid}`);
       return isPaid;
     });
     
@@ -55,11 +74,20 @@ export const useOrderMetrics = (selectedPeriod: string) => {
     const pendingOrders = orders.filter(order => isPendingStatus(order.status)).length;
     const cancelledOrders = orders.filter(order => isCancelledStatus(order.status)).length;
 
-    // Calcula receita dos pedidos pagos
+    // Calcula receita dos pedidos pagos com correção automática
     const paidRevenue = paidOrdersArray.reduce((sum, order) => {
       const paidAmount = Number(order.paid_amount) || Number(order.amount) || 0;
-      console.log(`Receita paga do pedido ${order.external_id}: ${paidAmount}`);
-      return sum + paidAmount;
+      
+      // Se o valor parece estar em centavos (número inteiro >= 1000), converte
+      const correctedPaidAmount = (Number.isInteger(paidAmount) && paidAmount >= 1000) ? paidAmount / 100 : paidAmount;
+      
+      console.log(`💳 Receita paga do pedido ${order.external_id}:`, {
+        original: paidAmount,
+        corrected: correctedPaidAmount,
+        was_converted: (Number.isInteger(paidAmount) && paidAmount >= 1000)
+      });
+      
+      return sum + correctedPaidAmount;
     }, 0);
 
     const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
@@ -76,7 +104,7 @@ export const useOrderMetrics = (selectedPeriod: string) => {
       paidRevenue
     };
 
-    console.log('📊 Métricas calculadas para', selectedPeriod, ':', finalMetrics);
+    console.log('📊 Métricas finais calculadas para', selectedPeriod, ':', finalMetrics);
 
     return finalMetrics;
   }, [orders, selectedPeriod]);
