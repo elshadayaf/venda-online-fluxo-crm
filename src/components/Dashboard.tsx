@@ -12,19 +12,28 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 export function Dashboard() {
   const [selectedPeriod, setSelectedPeriod] = useState("today");
   const { isActive, toggleNotifications, simulateSale, isSoundEnabled, toggleSound } = useNotifications();
   const { toast } = useToast();
+  const { signOut, user } = useAuth();
 
-  const handleLogout = () => {
-    toast({
-      title: "Logout realizado",
-      description: "Você foi desconectado do sistema com sucesso.",
-    });
-    // Aqui você pode adicionar a lógica de logout real quando integrar com autenticação
-    console.log("Logout realizado");
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Logout realizado",
+        description: "Você foi desconectado do sistema com sucesso.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro no logout",
+        description: "Ocorreu um erro ao sair do sistema.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -35,7 +44,9 @@ export function Dashboard() {
           <SidebarTrigger className="text-white hover:bg-gray-800" />
           <div>
             <h1 className="text-3xl font-bold text-white">Dashboard de Vendas</h1>
-            <p className="text-gray-400">Visão geral do seu negócio</p>
+            <p className="text-gray-400">
+              Bem-vindo, {user?.user_metadata?.full_name || user?.email || 'Usuário'}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-4">
