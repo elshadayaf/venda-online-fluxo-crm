@@ -69,8 +69,8 @@ const menuItems = [
 
 export function AppSidebar() {
   return (
-    <Sidebar className="border-r border-gray-800 bg-gray-900">
-      <SidebarHeader className="p-6 border-b border-gray-800">
+    <Sidebar className="border-r border-gray-800 bg-black">
+      <SidebarHeader className="p-6 border-b border-gray-800 bg-black">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
             <BarChart3 className="w-5 h-5 text-white" />
@@ -80,7 +80,7 @@ export function AppSidebar() {
           </span>
         </div>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="bg-black">
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3">
             Menu Principal
