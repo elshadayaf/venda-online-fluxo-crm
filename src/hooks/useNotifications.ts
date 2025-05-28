@@ -1,6 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
+import { useAudio } from '@/hooks/useAudio';
 
 interface Sale {
   id: string;
@@ -12,6 +12,7 @@ interface Sale {
 
 export function useNotifications() {
   const [isActive, setIsActive] = useState(false);
+  const { isSoundEnabled, toggleSound, playCashRegisterSound } = useAudio();
 
   // Simular novas vendas a cada 30 segundos quando ativo
   useEffect(() => {
@@ -61,6 +62,11 @@ export function useNotifications() {
     const statusText = sale.status === 'pago' ? 'PAGA' : 'PENDENTE';
     const statusColor = sale.status === 'pago' ? '🟢' : '🟡';
     
+    // Tocar som apenas para vendas pagas
+    if (sale.status === 'pago') {
+      playCashRegisterSound();
+    }
+    
     toast({
       title: `${statusColor} Nova Venda Registrada!`,
       description: `${sale.customer} - ${sale.amount} - Status: ${statusText} (${sale.method})`,
@@ -101,6 +107,8 @@ export function useNotifications() {
   return {
     isActive,
     toggleNotifications,
-    simulateSale
+    simulateSale,
+    isSoundEnabled,
+    toggleSound
   };
 }

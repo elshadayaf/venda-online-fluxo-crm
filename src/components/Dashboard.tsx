@@ -6,14 +6,14 @@ import { SalesChart } from "@/components/SalesChart";
 import { PaymentMethodChart } from "@/components/PaymentMethodChart";
 import { RecentSales } from "@/components/RecentSales";
 import { FilterTabs } from "@/components/FilterTabs";
-import { Bell, Search, BellRing, BellOff, Zap } from "lucide-react";
+import { Bell, Search, BellRing, BellOff, Zap, Volume2, VolumeX } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useNotifications } from "@/hooks/useNotifications";
 
 export function Dashboard() {
   const [selectedPeriod, setSelectedPeriod] = useState("today");
-  const { isActive, toggleNotifications, simulateSale } = useNotifications();
+  const { isActive, toggleNotifications, simulateSale, isSoundEnabled, toggleSound } = useNotifications();
 
   return (
     <div className="flex-1 space-y-6 p-6 bg-black min-h-screen">
@@ -44,6 +44,17 @@ export function Dashboard() {
           >
             <Zap className="w-4 h-4 mr-2" />
             Simular Venda
+          </Button>
+          
+          {/* Botão de controle de som */}
+          <Button 
+            onClick={toggleSound}
+            variant="ghost" 
+            size="icon" 
+            className={`text-white hover:bg-gray-800 ${isSoundEnabled ? 'bg-green-600 hover:bg-green-500' : ''}`}
+            title={isSoundEnabled ? 'Som ativado' : 'Som desativado'}
+          >
+            {isSoundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
           </Button>
           
           {/* Botão de notificações */}
