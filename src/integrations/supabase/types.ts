@@ -20,22 +20,51 @@ export type Database = {
           address_street: string | null
           address_zip_code: string | null
           amount: number
+          barcode: string | null
+          billing_address_city: string | null
+          billing_address_complement: string | null
+          billing_address_country: string | null
+          billing_address_neighborhood: string | null
+          billing_address_number: string | null
+          billing_address_state: string | null
+          billing_address_street: string | null
+          billing_address_zip_code: string | null
+          cancelled_at: string | null
+          cancelled_reason: string | null
           created_at: string
+          customer_birth_date: string | null
           customer_document: string | null
           customer_email: string
+          customer_gender: string | null
           customer_name: string
           customer_phone: string | null
+          discount_amount: number | null
+          due_date: string | null
+          expired_at: string | null
           external_id: string
           id: string
+          installments: number | null
           items: Json | null
           metadata: Json | null
+          notes: string | null
           paid_amount: number | null
           paid_at: string | null
+          payment_gateway: string | null
+          payment_link: string | null
           payment_method: string
+          pix_key: string | null
           qr_code: string | null
+          refund_amount: number | null
+          refund_reason: string | null
           secure_url: string | null
+          shipping_amount: number | null
           status: string
+          tags: Json | null
+          tax_amount: number | null
+          transaction_id: string | null
           updated_at: string
+          webhook_event: string | null
+          webhook_source: string | null
         }
         Insert: {
           address_city?: string | null
@@ -47,22 +76,51 @@ export type Database = {
           address_street?: string | null
           address_zip_code?: string | null
           amount: number
+          barcode?: string | null
+          billing_address_city?: string | null
+          billing_address_complement?: string | null
+          billing_address_country?: string | null
+          billing_address_neighborhood?: string | null
+          billing_address_number?: string | null
+          billing_address_state?: string | null
+          billing_address_street?: string | null
+          billing_address_zip_code?: string | null
+          cancelled_at?: string | null
+          cancelled_reason?: string | null
           created_at?: string
+          customer_birth_date?: string | null
           customer_document?: string | null
           customer_email: string
+          customer_gender?: string | null
           customer_name: string
           customer_phone?: string | null
+          discount_amount?: number | null
+          due_date?: string | null
+          expired_at?: string | null
           external_id: string
           id?: string
+          installments?: number | null
           items?: Json | null
           metadata?: Json | null
+          notes?: string | null
           paid_amount?: number | null
           paid_at?: string | null
+          payment_gateway?: string | null
+          payment_link?: string | null
           payment_method: string
+          pix_key?: string | null
           qr_code?: string | null
+          refund_amount?: number | null
+          refund_reason?: string | null
           secure_url?: string | null
+          shipping_amount?: number | null
           status: string
+          tags?: Json | null
+          tax_amount?: number | null
+          transaction_id?: string | null
           updated_at?: string
+          webhook_event?: string | null
+          webhook_source?: string | null
         }
         Update: {
           address_city?: string | null
@@ -74,22 +132,51 @@ export type Database = {
           address_street?: string | null
           address_zip_code?: string | null
           amount?: number
+          barcode?: string | null
+          billing_address_city?: string | null
+          billing_address_complement?: string | null
+          billing_address_country?: string | null
+          billing_address_neighborhood?: string | null
+          billing_address_number?: string | null
+          billing_address_state?: string | null
+          billing_address_street?: string | null
+          billing_address_zip_code?: string | null
+          cancelled_at?: string | null
+          cancelled_reason?: string | null
           created_at?: string
+          customer_birth_date?: string | null
           customer_document?: string | null
           customer_email?: string
+          customer_gender?: string | null
           customer_name?: string
           customer_phone?: string | null
+          discount_amount?: number | null
+          due_date?: string | null
+          expired_at?: string | null
           external_id?: string
           id?: string
+          installments?: number | null
           items?: Json | null
           metadata?: Json | null
+          notes?: string | null
           paid_amount?: number | null
           paid_at?: string | null
+          payment_gateway?: string | null
+          payment_link?: string | null
           payment_method?: string
+          pix_key?: string | null
           qr_code?: string | null
+          refund_amount?: number | null
+          refund_reason?: string | null
           secure_url?: string | null
+          shipping_amount?: number | null
           status?: string
+          tags?: Json | null
+          tax_amount?: number | null
+          transaction_id?: string | null
           updated_at?: string
+          webhook_event?: string | null
+          webhook_source?: string | null
         }
         Relationships: []
       }

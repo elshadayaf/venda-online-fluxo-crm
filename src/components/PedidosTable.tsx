@@ -122,8 +122,8 @@ const OrderDetailsDialog = ({ order }: { order: Order }) => {
             <p><span className="text-gray-400">Email:</span> {order.customer_email}</p>
             {order.customer_phone && <p><span className="text-gray-400">Telefone:</span> {order.customer_phone}</p>}
             {order.customer_document && <p><span className="text-gray-400">Documento:</span> {order.customer_document}</p>}
-            {order.customer_birth_date && <p><span className="text-gray-400">Data de Nascimento:</span> {format(new Date(order.customer_birth_date), "dd/MM/yyyy", { locale: ptBR })}</p>}
-            {order.customer_gender && <p><span className="text-gray-400">Gênero:</span> {order.customer_gender}</p>}
+            {(order as any).customer_birth_date && <p><span className="text-gray-400">Data de Nascimento:</span> {format(new Date((order as any).customer_birth_date), "dd/MM/yyyy", { locale: ptBR })}</p>}
+            {(order as any).customer_gender && <p><span className="text-gray-400">Gênero:</span> {(order as any).customer_gender}</p>}
           </div>
         </div>
 
@@ -134,12 +134,12 @@ const OrderDetailsDialog = ({ order }: { order: Order }) => {
             <p><span className="text-gray-400">Status:</span> {getStatusBadge(order.status)}</p>
             <p><span className="text-gray-400">Valor Total:</span> {formatCurrency(order.amount)}</p>
             <p><span className="text-gray-400">Valor Pago:</span> {formatCurrency(order.paid_amount)}</p>
-            {order.discount_amount && order.discount_amount > 0 && <p><span className="text-gray-400">Desconto:</span> {formatCurrency(order.discount_amount)}</p>}
-            {order.tax_amount && order.tax_amount > 0 && <p><span className="text-gray-400">Taxa:</span> {formatCurrency(order.tax_amount)}</p>}
-            {order.shipping_amount && order.shipping_amount > 0 && <p><span className="text-gray-400">Frete:</span> {formatCurrency(order.shipping_amount)}</p>}
+            {(order as any).discount_amount && (order as any).discount_amount > 0 && <p><span className="text-gray-400">Desconto:</span> {formatCurrency((order as any).discount_amount)}</p>}
+            {(order as any).tax_amount && (order as any).tax_amount > 0 && <p><span className="text-gray-400">Taxa:</span> {formatCurrency((order as any).tax_amount)}</p>}
+            {(order as any).shipping_amount && (order as any).shipping_amount > 0 && <p><span className="text-gray-400">Frete:</span> {formatCurrency((order as any).shipping_amount)}</p>}
             <p><span className="text-gray-400">Método de Pagamento:</span> {getPaymentLabel(order.payment_method)}</p>
-            {order.installments && order.installments > 1 && <p><span className="text-gray-400">Parcelas:</span> {order.installments}x</p>}
-            {order.payment_gateway && <p><span className="text-gray-400">Gateway:</span> {order.payment_gateway}</p>}
+            {(order as any).installments && (order as any).installments > 1 && <p><span className="text-gray-400">Parcelas:</span> {(order as any).installments}x</p>}
+            {(order as any).payment_gateway && <p><span className="text-gray-400">Gateway:</span> {(order as any).payment_gateway}</p>}
           </div>
         </div>
 
@@ -163,13 +163,13 @@ const OrderDetailsDialog = ({ order }: { order: Order }) => {
           <div className="space-y-2">
             <p><span className="text-gray-400">Criado em:</span> {format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</p>
             {order.paid_at && <p><span className="text-gray-400">Pago em:</span> {format(new Date(order.paid_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</p>}
-            {order.due_date && <p><span className="text-gray-400">Vencimento:</span> {format(new Date(order.due_date), "dd/MM/yyyy HH:mm", { locale: ptBR })}</p>}
-            {order.transaction_id && <p><span className="text-gray-400">ID da Transação:</span> {order.transaction_id}</p>}
-            {order.pix_key && <p><span className="text-gray-400">Chave PIX:</span> {order.pix_key}</p>}
-            {order.payment_link && (
+            {(order as any).due_date && <p><span className="text-gray-400">Vencimento:</span> {format(new Date((order as any).due_date), "dd/MM/yyyy HH:mm", { locale: ptBR })}</p>}
+            {(order as any).transaction_id && <p><span className="text-gray-400">ID da Transação:</span> {(order as any).transaction_id}</p>}
+            {(order as any).pix_key && <p><span className="text-gray-400">Chave PIX:</span> {(order as any).pix_key}</p>}
+            {(order as any).payment_link && (
               <p>
                 <span className="text-gray-400">Link de Pagamento:</span>{' '}
-                <a href={order.payment_link} target="_blank" rel="noopener noreferrer" className="text-orange-500 hover:text-orange-400">
+                <a href={(order as any).payment_link} target="_blank" rel="noopener noreferrer" className="text-orange-500 hover:text-orange-400">
                   <ExternalLink className="w-4 h-4 inline ml-1" />
                 </a>
               </p>
@@ -178,16 +178,16 @@ const OrderDetailsDialog = ({ order }: { order: Order }) => {
         </div>
 
         {/* Additional Information */}
-        {(order.notes || order.tags) && (
+        {((order as any).notes || (order as any).tags) && (
           <div className="md:col-span-2 space-y-4">
             <h3 className="text-lg font-semibold text-orange-500">Informações Adicionais</h3>
             <div className="space-y-2">
-              {order.notes && <p><span className="text-gray-400">Observações:</span> {order.notes}</p>}
-              {order.tags && Array.isArray(order.tags) && order.tags.length > 0 && (
+              {(order as any).notes && <p><span className="text-gray-400">Observações:</span> {(order as any).notes}</p>}
+              {(order as any).tags && Array.isArray((order as any).tags) && (order as any).tags.length > 0 && (
                 <div>
                   <span className="text-gray-400">Tags:</span>
                   <div className="flex flex-wrap gap-2 mt-1">
-                    {order.tags.map((tag, index) => (
+                    {(order as any).tags.map((tag: string, index: number) => (
                       <Badge key={index} variant="outline" className="text-orange-500 border-orange-500">
                         {tag}
                       </Badge>
