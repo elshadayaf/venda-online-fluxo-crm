@@ -1,14 +1,7 @@
 
 import {
   BarChart3,
-  CreditCard,
-  DollarSign,
   Home,
-  ShoppingCart,
-  TrendingUp,
-  Users,
-  Calendar,
-  Filter,
   Package
 } from "lucide-react";
 import {
@@ -34,36 +27,6 @@ const menuItems = [
     title: "Pedidos",
     url: "/pedidos",
     icon: Package,
-  },
-  {
-    title: "Vendas",
-    url: "#",
-    icon: ShoppingCart,
-  },
-  {
-    title: "Faturamento",
-    url: "#",
-    icon: DollarSign,
-  },
-  {
-    title: "Análises",
-    url: "#",
-    icon: BarChart3,
-  },
-  {
-    title: "Pagamentos",
-    url: "#",
-    icon: CreditCard,
-  },
-  {
-    title: "CRM",
-    url: "#",
-    icon: Users,
-  },
-  {
-    title: "Relatórios",
-    url: "#",
-    icon: TrendingUp,
   },
 ];
 
