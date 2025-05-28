@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 
 export const getPaymentIcon = (method: string) => {
   const lowerMethod = method.toLowerCase();
-  if (lowerMethod.includes('card') || lowerMethod.includes('cartao')) {
+  if (lowerMethod.includes('card') || lowerMethod.includes('cartao') || lowerMethod.includes('credit') || lowerMethod.includes('debit')) {
     return <CreditCard className="w-4 h-4" />;
   }
   if (lowerMethod.includes('pix')) {
@@ -18,7 +18,7 @@ export const getPaymentIcon = (method: string) => {
 
 export const getPaymentLabel = (method: string) => {
   const lowerMethod = method.toLowerCase();
-  if (lowerMethod.includes('card') || lowerMethod.includes('cartao')) {
+  if (lowerMethod.includes('card') || lowerMethod.includes('cartao') || lowerMethod.includes('credit') || lowerMethod.includes('debit')) {
     return "Cartão";
   }
   if (lowerMethod.includes('pix')) {
@@ -73,4 +73,27 @@ export const formatCurrency = (value: number | null) => {
     style: 'currency',
     currency: 'BRL'
   }).format(value);
+};
+
+export const getPaymentMethodCategory = (method: string): string => {
+  const lowerMethod = method.toLowerCase();
+  if (lowerMethod.includes('pix')) return 'PIX';
+  if (lowerMethod.includes('card') || lowerMethod.includes('cartao') || lowerMethod.includes('credit') || lowerMethod.includes('debit')) return 'Cartão';
+  if (lowerMethod.includes('boleto')) return 'Boleto';
+  return 'Outros';
+};
+
+export const isPaidStatus = (status: string): boolean => {
+  const lowerStatus = status.toLowerCase();
+  return lowerStatus.includes('paid') || lowerStatus.includes('pago') || lowerStatus.includes('approved');
+};
+
+export const isPendingStatus = (status: string): boolean => {
+  const lowerStatus = status.toLowerCase();
+  return lowerStatus.includes('pending') || lowerStatus.includes('pendente');
+};
+
+export const isCancelledStatus = (status: string): boolean => {
+  const lowerStatus = status.toLowerCase();
+  return lowerStatus.includes('cancelled') || lowerStatus.includes('cancelado');
 };

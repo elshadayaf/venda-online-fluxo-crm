@@ -1,7 +1,8 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowUp, ArrowDown, DollarSign, ShoppingCart, CreditCard, Clock, TrendingUp } from "lucide-react";
+import { ArrowUp, ArrowDown, DollarSign, ShoppingCart, CreditCard, Clock, TrendingUp, Loader2 } from "lucide-react";
 import { useOrderMetrics } from "@/hooks/useOrderMetrics";
+import { formatCurrency } from "@/utils/orderUtils";
 
 interface MetricCardsProps {
   selectedPeriod: string;
@@ -9,13 +10,6 @@ interface MetricCardsProps {
 
 export function MetricCards({ selectedPeriod }: MetricCardsProps) {
   const { metrics, loading } = useOrderMetrics(selectedPeriod);
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value);
-  };
 
   const formatPercentage = (value: number) => {
     return `${value.toFixed(1)}%`;
@@ -25,14 +19,14 @@ export function MetricCards({ selectedPeriod }: MetricCardsProps) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {[...Array(5)].map((_, index) => (
-          <Card key={index} className="animate-pulse bg-gray-900 border-gray-800">
+          <Card key={index} className="bg-gray-900 border-gray-800">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <div className="h-4 bg-gray-700 rounded w-24"></div>
-              <div className="h-8 w-8 bg-gray-700 rounded"></div>
+              <div className="h-4 bg-gray-700 rounded w-24 animate-pulse"></div>
+              <div className="h-8 w-8 bg-gray-700 rounded animate-pulse"></div>
             </CardHeader>
             <CardContent>
-              <div className="h-8 bg-gray-700 rounded w-20 mb-2"></div>
-              <div className="h-4 bg-gray-700 rounded w-32"></div>
+              <div className="h-8 bg-gray-700 rounded w-20 mb-2 animate-pulse"></div>
+              <div className="h-4 bg-gray-700 rounded w-32 animate-pulse"></div>
             </CardContent>
           </Card>
         ))}

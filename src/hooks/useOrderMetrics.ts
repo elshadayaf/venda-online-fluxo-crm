@@ -1,6 +1,7 @@
 
 import { useMemo } from 'react';
 import { useOrders } from './useOrders';
+import { isPaidStatus, isPendingStatus, isCancelledStatus } from '@/utils/orderUtils';
 
 export const useOrderMetrics = (selectedPeriod: string) => {
   const { orders, loading, error } = useOrders(selectedPeriod);
@@ -21,29 +22,16 @@ export const useOrderMetrics = (selectedPeriod: string) => {
 
     const totalOrders = orders.length;
     const totalRevenue = orders.reduce((sum, order) => sum + Number(order.amount), 0);
-    const paidOrders = orders.filter(order => 
-      order.status.toLowerCase().includes('paid') || 
-      order.status.toLowerCase().includes('pago') || 
-      order.status.toLowerCase().includes('approved')
-    ).length;
     
-    const pendingOrders = orders.filter(order => 
-      order.status.toLowerCase().includes('pending') || 
-      order.status.toLowerCase().includes('pendente')
-    ).length;
+    const paidOrdersArray = orders.filter(order => isPaidStatus(order.status));
+    const paidOrders = paidOrdersArray.length;
     
-    const cancelledOrders = orders.filter(order => 
-      order.status.toLowerCase().includes('cancelled') || 
-      order.status.toLowerCase().includes('cancelado')
-    ).length;
+    const pendingOrders = orders.filter(order => isPendingStatus(order.status)).length;
+    const cancelledOrders = orders.filter(order => isCancelledStatus(order.status)).length;
 
-    const paidRevenue = orders
-      .filter(order => 
-        order.status.toLowerCase().includes('paid') || 
-        order.status.toLowerCase().includes('pago') || 
-        order.status.toLowerCase().includes('approved')
-      )
-      .reduce((sum, order) => sum + Number(order.paid_amount || order.amount), 0);
+    const paidRevenue = paidOrdersArray.reduce((sum, order) => {
+      return sum + Number(order.paid_amount || order.amount);
+    }, 0);
 
     const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
     const conversionRate = totalOrders > 0 ? (paidOrders / totalOrders) * 100 : 0;
