@@ -1,75 +1,90 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { useAudio } from '@/hooks/useAudio';
+import { supabase } from '@/integrations/supabase/client';
+import { Tables } from '@/integrations/supabase/types';
 
-interface Sale {
-  id: string;
-  customer: string;
-  amount: string;
-  status: 'pago' | 'pendente';
-  method: string;
-}
+type Order = Tables<'orders'>;
 
 export function useNotifications() {
   const [isActive, setIsActive] = useState(false);
   const { isSoundEnabled, toggleSound, playCashRegisterSound } = useAudio();
 
-  // Simular novas vendas a cada 30 segundos quando ativo
+  // Escutar mudanças em tempo real na tabela de pedidos
   useEffect(() => {
     if (!isActive) return;
 
-    const mockSales: Omit<Sale, 'id'>[] = [
-      {
-        customer: "João Silva",
-        amount: "R$ 1.250,00",
-        status: "pago",
-        method: "PIX"
-      },
-      {
-        customer: "Maria Santos",
-        amount: "R$ 890,00",
-        status: "pendente",
-        method: "Boleto"
-      },
-      {
-        customer: "Pedro Costa",
-        amount: "R$ 2.150,00",
-        status: "pago",
-        method: "Cartão"
-      },
-      {
-        customer: "Ana Oliveira",
-        amount: "R$ 750,00",
-        status: "pendente",
-        method: "PIX"
-      }
-    ];
+    console.log('Ativando notificações de pedidos em tempo real');
 
-    const interval = setInterval(() => {
-      const randomSale = mockSales[Math.floor(Math.random() * mockSales.length)];
-      const saleId = `#${Math.floor(Math.random() * 9999) + 1000}`;
-      
-      showSaleNotification({
-        id: saleId,
-        ...randomSale
-      });
-    }, 30000); // 30 segundos
+    const channel = supabase
+      .channel('order-notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders'
+        },
+        (payload) => {
+          console.log('Mudança detectada na tabela orders:', payload);
+          handleOrderNotification(payload);
+        }
+      )
+      .subscribe();
 
-    return () => clearInterval(interval);
+    return () => {
+      console.log('Desativando notificações de pedidos');
+      supabase.removeChannel(channel);
+    };
   }, [isActive]);
 
-  const showSaleNotification = (sale: Sale) => {
-    const statusText = sale.status === 'pago' ? 'PAGA' : 'PENDENTE';
-    const statusColor = sale.status === 'pago' ? '🟢' : '🟡';
+  const handleOrderNotification = (payload: any) => {
+    const { eventType, new: newOrder, old: oldOrder } = payload;
     
-    // Tocar som apenas para vendas pagas
-    if (sale.status === 'pago') {
+    if (eventType === 'INSERT') {
+      // Novo pedido criado
+      showOrderNotification(newOrder, 'new');
+    } else if (eventType === 'UPDATE') {
+      // Pedido atualizado - verificar se status mudou
+      if (oldOrder && newOrder && oldOrder.status !== newOrder.status) {
+        showOrderNotification(newOrder, 'status_change');
+      }
+    }
+  };
+
+  const showOrderNotification = (order: Order, type: 'new' | 'status_change') => {
+    const isPaid = order.status.toLowerCase().includes('paid') || 
+                   order.status.toLowerCase().includes('pago') || 
+                   order.status.toLowerCase().includes('approved');
+    
+    const statusText = isPaid ? 'PAGO' : 'PENDENTE';
+    const statusEmoji = isPaid ? '🟢' : '🟡';
+    
+    const amount = new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(Number(order.amount));
+
+    let title = '';
+    let description = '';
+
+    if (type === 'new') {
+      title = `${statusEmoji} Novo Pedido Recebido!`;
+      description = `${order.customer_name} - ${amount} - ${order.payment_method}`;
+    } else {
+      title = `${statusEmoji} Status do Pedido Atualizado!`;
+      description = `${order.customer_name} - ${amount} - Status: ${statusText}`;
+    }
+    
+    // Tocar som apenas para pedidos pagos
+    if (isPaid) {
       playCashRegisterSound();
     }
     
     toast({
-      title: `${statusColor} Nova Venda Registrada!`,
-      description: `${sale.customer} - ${sale.amount} - Status: ${statusText} (${sale.method})`,
+      title,
+      description,
       duration: 5000,
     });
   };
@@ -79,29 +94,47 @@ export function useNotifications() {
     if (!isActive) {
       toast({
         title: "🔔 Notificações Ativadas",
-        description: "Você receberá notificações de novas vendas",
+        description: "Você receberá notificações de pedidos em tempo real",
         duration: 3000,
       });
     } else {
       toast({
         title: "🔕 Notificações Desativadas",
-        description: "Notificações de vendas foram pausadas",
+        description: "Notificações de pedidos foram pausadas",
         duration: 3000,
       });
     }
   };
 
-  // Simular uma venda imediatamente para demonstração
-  const simulateSale = () => {
-    const mockSale: Sale = {
-      id: `#${Math.floor(Math.random() * 9999) + 1000}`,
-      customer: "Cliente Teste",
-      amount: `R$ ${(Math.random() * 2000 + 500).toFixed(2).replace('.', ',')}`,
-      status: Math.random() > 0.5 ? 'pago' : 'pendente',
-      method: ['PIX', 'Cartão', 'Boleto'][Math.floor(Math.random() * 3)]
-    };
-    
-    showSaleNotification(mockSale);
+  // Função para simular um pedido (manter para testes)
+  const simulateSale = async () => {
+    try {
+      const mockOrder = {
+        external_id: `TEST-${Date.now()}`,
+        customer_name: "Cliente Teste",
+        customer_email: "teste@exemplo.com",
+        amount: Math.random() * 2000 + 500,
+        payment_method: ['PIX', 'Cartão', 'Boleto'][Math.floor(Math.random() * 3)],
+        status: Math.random() > 0.5 ? 'paid' : 'pending'
+      };
+
+      const { error } = await supabase
+        .from('orders')
+        .insert([mockOrder]);
+
+      if (error) {
+        console.error('Erro ao simular pedido:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao simular pedido",
+          variant: "destructive",
+        });
+      } else {
+        console.log('Pedido simulado criado com sucesso');
+      }
+    } catch (error) {
+      console.error('Erro ao simular pedido:', error);
+    }
   };
 
   return {
