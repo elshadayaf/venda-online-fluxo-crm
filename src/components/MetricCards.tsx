@@ -1,84 +1,83 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowUp, ArrowDown, DollarSign, ShoppingCart, CreditCard, Clock, TrendingUp } from "lucide-react";
+import { useOrderMetrics } from "@/hooks/useOrderMetrics";
 
 interface MetricCardsProps {
   selectedPeriod: string;
 }
 
 export function MetricCards({ selectedPeriod }: MetricCardsProps) {
-  // Mock data que seria vinda da API
-  const metrics = {
-    today: {
-      totalSales: { value: "R$ 12.580", change: "+12.5%", trend: "up" },
-      paidSales: { value: "R$ 8.920", change: "+8.2%", trend: "up" },
-      pendingSales: { value: "R$ 3.660", change: "-2.1%", trend: "down" },
-      conversionRate: { value: "3.2%", change: "+0.5%", trend: "up" },
-      averageTicket: { value: "R$ 385", change: "+5.8%", trend: "up" },
-    },
-    yesterday: {
-      totalSales: { value: "R$ 11.240", change: "+5.8%", trend: "up" },
-      paidSales: { value: "R$ 8.250", change: "+7.1%", trend: "up" },
-      pendingSales: { value: "R$ 2.990", change: "-1.8%", trend: "down" },
-      conversionRate: { value: "2.9%", change: "+0.2%", trend: "up" },
-      averageTicket: { value: "R$ 364", change: "+3.2%", trend: "up" },
-    },
-    "7days": {
-      totalSales: { value: "R$ 78.950", change: "+18.7%", trend: "up" },
-      paidSales: { value: "R$ 65.420", change: "+15.3%", trend: "up" },
-      pendingSales: { value: "R$ 13.530", change: "+8.9%", trend: "up" },
-      conversionRate: { value: "3.1%", change: "+0.8%", trend: "up" },
-      averageTicket: { value: "R$ 412", change: "+12.1%", trend: "up" },
-    },
-    month: {
-      totalSales: { value: "R$ 342.180", change: "+24.2%", trend: "up" },
-      paidSales: { value: "R$ 287.650", change: "+22.8%", trend: "up" },
-      pendingSales: { value: "R$ 54.530", change: "+12.4%", trend: "up" },
-      conversionRate: { value: "3.4%", change: "+1.2%", trend: "up" },
-      averageTicket: { value: "R$ 456", change: "+18.5%", trend: "up" },
-    },
+  const { metrics, loading } = useOrderMetrics(selectedPeriod);
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
   };
 
-  const currentData = metrics[selectedPeriod as keyof typeof metrics] || metrics.today;
+  const formatPercentage = (value: number) => {
+    return `${value.toFixed(1)}%`;
+  };
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        {[...Array(5)].map((_, index) => (
+          <Card key={index} className="animate-pulse bg-gray-900 border-gray-800">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <div className="h-4 bg-gray-700 rounded w-24"></div>
+              <div className="h-8 w-8 bg-gray-700 rounded"></div>
+            </CardHeader>
+            <CardContent>
+              <div className="h-8 bg-gray-700 rounded w-20 mb-2"></div>
+              <div className="h-4 bg-gray-700 rounded w-32"></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
 
   const cards = [
     {
       title: "Total de Vendas",
-      value: currentData.totalSales.value,
-      change: currentData.totalSales.change,
-      trend: currentData.totalSales.trend,
+      value: formatCurrency(metrics.totalRevenue),
+      change: "+12.5%", // TODO: Calculate real change
+      trend: "up" as const,
       icon: DollarSign,
       color: "from-orange-500 to-orange-600",
     },
     {
       title: "Vendas Pagas",
-      value: currentData.paidSales.value,
-      change: currentData.paidSales.change,
-      trend: currentData.paidSales.trend,
+      value: formatCurrency(metrics.paidRevenue),
+      change: "+8.2%", // TODO: Calculate real change
+      trend: "up" as const,
       icon: ShoppingCart,
       color: "from-cyan-400 to-cyan-500",
     },
     {
-      title: "Vendas Pendentes",
-      value: currentData.pendingSales.value,
-      change: currentData.pendingSales.change,
-      trend: currentData.pendingSales.trend,
+      title: "Pedidos Pendentes",
+      value: metrics.pendingOrders.toString(),
+      change: "-2.1%", // TODO: Calculate real change
+      trend: "down" as const,
       icon: Clock,
       color: "from-yellow-400 to-yellow-500",
     },
     {
       title: "Taxa de Conversão",
-      value: currentData.conversionRate.value,
-      change: currentData.conversionRate.change,
-      trend: currentData.conversionRate.trend,
+      value: formatPercentage(metrics.conversionRate),
+      change: "+0.5%", // TODO: Calculate real change
+      trend: "up" as const,
       icon: CreditCard,
       color: "from-purple-500 to-purple-600",
     },
     {
       title: "Ticket Médio",
-      value: currentData.averageTicket.value,
-      change: currentData.averageTicket.change,
-      trend: currentData.averageTicket.trend,
+      value: formatCurrency(metrics.averageOrderValue),
+      change: "+5.8%", // TODO: Calculate real change
+      trend: "up" as const,
       icon: TrendingUp,
       color: "from-green-500 to-green-600",
     },

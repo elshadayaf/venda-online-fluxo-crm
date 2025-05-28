@@ -46,11 +46,28 @@ serve(async (req) => {
       customer_email: requestBody.customer?.email || requestBody.customer_email || requestBody.payer?.email || 'webhook@exemplo.com',
       customer_phone: requestBody.customer?.phone || requestBody.customer_phone || requestBody.payer?.phone,
       customer_document: requestBody.customer?.document || requestBody.customer_document || requestBody.payer?.document,
+      customer_birth_date: requestBody.customer?.birth_date || requestBody.customer_birth_date || requestBody.payer?.birth_date,
+      customer_gender: requestBody.customer?.gender || requestBody.customer_gender || requestBody.payer?.gender,
+      
       amount: Number(requestBody.amount || requestBody.value || requestBody.total || 0),
       paid_amount: Number(requestBody.paid_amount || requestBody.amount || requestBody.value || requestBody.total || 0),
+      discount_amount: Number(requestBody.discount_amount || requestBody.discount || 0),
+      tax_amount: Number(requestBody.tax_amount || requestBody.tax || 0),
+      shipping_amount: Number(requestBody.shipping_amount || requestBody.shipping || 0),
+      refund_amount: Number(requestBody.refund_amount || requestBody.refund || 0),
+      
       payment_method: requestBody.payment_method || requestBody.method || requestBody.payment_type || 'webhook',
+      payment_gateway: requestBody.payment_gateway || requestBody.gateway || requestBody.provider,
+      transaction_id: requestBody.transaction_id || requestBody.gateway_transaction_id || requestBody.tid,
+      installments: Number(requestBody.installments || requestBody.parcelas || 1),
+      
       status: requestBody.status || 'pending',
       paid_at: requestBody.paid_at ? new Date(requestBody.paid_at).toISOString() : null,
+      due_date: requestBody.due_date ? new Date(requestBody.due_date).toISOString() : null,
+      cancelled_at: requestBody.cancelled_at ? new Date(requestBody.cancelled_at).toISOString() : null,
+      cancelled_reason: requestBody.cancelled_reason || requestBody.cancel_reason,
+      expired_at: requestBody.expired_at ? new Date(requestBody.expired_at).toISOString() : null,
+      refund_reason: requestBody.refund_reason,
       
       // Address data with improved mapping
       address_street: requestBody.address?.street || requestBody.customer?.address?.street || requestBody.payer?.address?.street,
@@ -62,11 +79,32 @@ serve(async (req) => {
       address_zip_code: requestBody.address?.zip_code || requestBody.customer?.address?.zip_code || requestBody.payer?.address?.zip_code,
       address_country: requestBody.address?.country || requestBody.customer?.address?.country || requestBody.payer?.address?.country || 'Brasil',
       
+      // Billing address
+      billing_address_street: requestBody.billing_address?.street || requestBody.billing?.street,
+      billing_address_number: requestBody.billing_address?.number || requestBody.billing?.number,
+      billing_address_complement: requestBody.billing_address?.complement || requestBody.billing?.complement,
+      billing_address_neighborhood: requestBody.billing_address?.neighborhood || requestBody.billing?.neighborhood,
+      billing_address_city: requestBody.billing_address?.city || requestBody.billing?.city,
+      billing_address_state: requestBody.billing_address?.state || requestBody.billing?.state,
+      billing_address_zip_code: requestBody.billing_address?.zip_code || requestBody.billing?.zip_code,
+      billing_address_country: requestBody.billing_address?.country || requestBody.billing?.country,
+      
+      // Payment specific data
+      pix_key: requestBody.pix_key || requestBody.pix?.key || requestBody.qr_code_key,
+      barcode: requestBody.barcode || requestBody.boleto?.barcode || requestBody.payment_code,
+      payment_link: requestBody.payment_link || requestBody.checkout_url || requestBody.payment_url,
+      
       // Additional data
       items: requestBody.items ? JSON.stringify(requestBody.items) : null,
       metadata: requestBody.metadata ? JSON.stringify(requestBody.metadata) : JSON.stringify(requestBody),
       secure_url: requestBody.secure_url || requestBody.checkout_url || requestBody.payment_url,
       qr_code: requestBody.qr_code || requestBody.pix_qr_code || requestBody.qr_code_base64,
+      notes: requestBody.notes || requestBody.description || requestBody.comments,
+      tags: requestBody.tags || (requestBody.tags ? [requestBody.tags] : null),
+      
+      // Webhook tracking
+      webhook_source: requestBody.source || requestBody.webhook_source || 'unknown',
+      webhook_event: requestBody.event || requestBody.webhook_event || 'order_update',
     };
 
     console.log('Processed order data:', JSON.stringify(orderData, null, 2));

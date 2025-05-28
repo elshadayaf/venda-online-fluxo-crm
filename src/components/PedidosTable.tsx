@@ -9,14 +9,26 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { CreditCard, Smartphone, FileText, Loader2 } from "lucide-react";
+import { CreditCard, Smartphone, FileText, Loader2, Eye, ExternalLink } from "lucide-react";
 import { useOrders } from "@/hooks/useOrders";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Tables } from "@/integrations/supabase/types";
 
 interface PedidosTableProps {
   selectedPeriod: string;
 }
+
+type Order = Tables<'orders'>;
 
 const getPaymentIcon = (method: string) => {
   const lowerMethod = method.toLowerCase();
@@ -69,10 +81,125 @@ const getStatusBadge = (status: string) => {
       </Badge>
     );
   }
+  if (lowerStatus.includes('expired') || lowerStatus.includes('expirado')) {
+    return (
+      <Badge className="bg-gray-600 hover:bg-gray-500 text-white">
+        Expirado
+      </Badge>
+    );
+  }
   return (
     <Badge variant="secondary" className="bg-gray-600 hover:bg-gray-500 text-white">
       {status}
     </Badge>
+  );
+};
+
+const OrderDetailsDialog = ({ order }: { order: Order }) => {
+  const formatCurrency = (value: number | null) => {
+    if (!value) return 'R$ 0,00';
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
+  };
+
+  return (
+    <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-gray-900 border-gray-800">
+      <DialogHeader>
+        <DialogTitle className="text-white">Detalhes do Pedido #{order.external_id}</DialogTitle>
+        <DialogDescription className="text-gray-400">
+          Informações completas do pedido
+        </DialogDescription>
+      </DialogHeader>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-white">
+        {/* Customer Information */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-orange-500">Informações do Cliente</h3>
+          <div className="space-y-2">
+            <p><span className="text-gray-400">Nome:</span> {order.customer_name}</p>
+            <p><span className="text-gray-400">Email:</span> {order.customer_email}</p>
+            {order.customer_phone && <p><span className="text-gray-400">Telefone:</span> {order.customer_phone}</p>}
+            {order.customer_document && <p><span className="text-gray-400">Documento:</span> {order.customer_document}</p>}
+            {order.customer_birth_date && <p><span className="text-gray-400">Data de Nascimento:</span> {format(new Date(order.customer_birth_date), "dd/MM/yyyy", { locale: ptBR })}</p>}
+            {order.customer_gender && <p><span className="text-gray-400">Gênero:</span> {order.customer_gender}</p>}
+          </div>
+        </div>
+
+        {/* Order Information */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-orange-500">Informações do Pedido</h3>
+          <div className="space-y-2">
+            <p><span className="text-gray-400">Status:</span> {getStatusBadge(order.status)}</p>
+            <p><span className="text-gray-400">Valor Total:</span> {formatCurrency(order.amount)}</p>
+            <p><span className="text-gray-400">Valor Pago:</span> {formatCurrency(order.paid_amount)}</p>
+            {order.discount_amount && order.discount_amount > 0 && <p><span className="text-gray-400">Desconto:</span> {formatCurrency(order.discount_amount)}</p>}
+            {order.tax_amount && order.tax_amount > 0 && <p><span className="text-gray-400">Taxa:</span> {formatCurrency(order.tax_amount)}</p>}
+            {order.shipping_amount && order.shipping_amount > 0 && <p><span className="text-gray-400">Frete:</span> {formatCurrency(order.shipping_amount)}</p>}
+            <p><span className="text-gray-400">Método de Pagamento:</span> {getPaymentLabel(order.payment_method)}</p>
+            {order.installments && order.installments > 1 && <p><span className="text-gray-400">Parcelas:</span> {order.installments}x</p>}
+            {order.payment_gateway && <p><span className="text-gray-400">Gateway:</span> {order.payment_gateway}</p>}
+          </div>
+        </div>
+
+        {/* Address Information */}
+        {(order.address_street || order.address_city) && (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-orange-500">Endereço de Entrega</h3>
+            <div className="space-y-2">
+              {order.address_street && <p><span className="text-gray-400">Rua:</span> {order.address_street}, {order.address_number}</p>}
+              {order.address_complement && <p><span className="text-gray-400">Complemento:</span> {order.address_complement}</p>}
+              {order.address_neighborhood && <p><span className="text-gray-400">Bairro:</span> {order.address_neighborhood}</p>}
+              {order.address_city && <p><span className="text-gray-400">Cidade:</span> {order.address_city} - {order.address_state}</p>}
+              {order.address_zip_code && <p><span className="text-gray-400">CEP:</span> {order.address_zip_code}</p>}
+            </div>
+          </div>
+        )}
+
+        {/* Payment Details */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-orange-500">Detalhes do Pagamento</h3>
+          <div className="space-y-2">
+            <p><span className="text-gray-400">Criado em:</span> {format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</p>
+            {order.paid_at && <p><span className="text-gray-400">Pago em:</span> {format(new Date(order.paid_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</p>}
+            {order.due_date && <p><span className="text-gray-400">Vencimento:</span> {format(new Date(order.due_date), "dd/MM/yyyy HH:mm", { locale: ptBR })}</p>}
+            {order.transaction_id && <p><span className="text-gray-400">ID da Transação:</span> {order.transaction_id}</p>}
+            {order.pix_key && <p><span className="text-gray-400">Chave PIX:</span> {order.pix_key}</p>}
+            {order.payment_link && (
+              <p>
+                <span className="text-gray-400">Link de Pagamento:</span>{' '}
+                <a href={order.payment_link} target="_blank" rel="noopener noreferrer" className="text-orange-500 hover:text-orange-400">
+                  <ExternalLink className="w-4 h-4 inline ml-1" />
+                </a>
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Additional Information */}
+        {(order.notes || order.tags) && (
+          <div className="md:col-span-2 space-y-4">
+            <h3 className="text-lg font-semibold text-orange-500">Informações Adicionais</h3>
+            <div className="space-y-2">
+              {order.notes && <p><span className="text-gray-400">Observações:</span> {order.notes}</p>}
+              {order.tags && Array.isArray(order.tags) && order.tags.length > 0 && (
+                <div>
+                  <span className="text-gray-400">Tags:</span>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {order.tags.map((tag, index) => (
+                      <Badge key={index} variant="outline" className="text-orange-500 border-orange-500">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </DialogContent>
   );
 };
 
@@ -135,6 +262,7 @@ export function PedidosTable({ selectedPeriod }: PedidosTableProps) {
               <TableHead className="text-gray-400">Email</TableHead>
               <TableHead className="text-gray-400">Pagamento</TableHead>
               <TableHead className="text-gray-400">Status</TableHead>
+              <TableHead className="text-gray-400">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -159,11 +287,21 @@ export function PedidosTable({ selectedPeriod }: PedidosTableProps) {
                   <TableCell>
                     {getStatusBadge(order.status)}
                   </TableCell>
+                  <TableCell>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white hover:bg-gray-800">
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <OrderDetailsDialog order={order} />
+                    </Dialog>
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-gray-400 py-8">
+                <TableCell colSpan={8} className="text-center text-gray-400 py-8">
                   Nenhum pedido encontrado para o período selecionado
                 </TableCell>
               </TableRow>
