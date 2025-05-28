@@ -8,17 +8,39 @@ import { PaymentMethodChart } from "@/components/PaymentMethodChart";
 import { RecentSales } from "@/components/RecentSales";
 import { FilterTabs } from "@/components/FilterTabs";
 import { DebugPanel } from "@/components/DebugPanel";
-import { Bell, BellRing, BellOff, Volume2, VolumeX, LogOut } from "lucide-react";
+import { Bell, BellRing, BellOff, Volume2, VolumeX, LogOut, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useOrders } from "@/hooks/useOrders";
 
 export function Dashboard() {
   const [selectedPeriod, setSelectedPeriod] = useState("today");
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const { isActive, toggleNotifications, isSoundEnabled, toggleSound } = useNotifications();
   const { toast } = useToast();
   const { signOut, user } = useAuth();
+  const { refetch } = useOrders(selectedPeriod);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refetch();
+      toast({
+        title: "Dados atualizados",
+        description: "O dashboard foi atualizado com os dados mais recentes.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao atualizar",
+        description: "Ocorreu um erro ao atualizar os dados.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -50,6 +72,18 @@ export function Dashboard() {
           </div>
         </div>
         <div className="flex items-center gap-4">
+          {/* Botão de refresh */}
+          <Button 
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            variant="ghost" 
+            size="icon" 
+            className="text-white hover:bg-gray-800"
+            title="Atualizar dados"
+          >
+            <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </Button>
+
           {/* Botão de controle de som */}
           <Button 
             onClick={toggleSound}
