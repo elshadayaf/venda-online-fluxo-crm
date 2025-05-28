@@ -7,14 +7,25 @@ import { HourlySalesChart } from "@/components/HourlySalesChart";
 import { PaymentMethodChart } from "@/components/PaymentMethodChart";
 import { RecentSales } from "@/components/RecentSales";
 import { FilterTabs } from "@/components/FilterTabs";
-import { Bell, Search, BellRing, BellOff, Zap, Volume2, VolumeX } from "lucide-react";
+import { Bell, Search, BellRing, BellOff, Zap, Volume2, VolumeX, LogOut } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useToast } from "@/hooks/use-toast";
 
 export function Dashboard() {
   const [selectedPeriod, setSelectedPeriod] = useState("today");
   const { isActive, toggleNotifications, simulateSale, isSoundEnabled, toggleSound } = useNotifications();
+  const { toast } = useToast();
+
+  const handleLogout = () => {
+    toast({
+      title: "Logout realizado",
+      description: "Você foi desconectado do sistema com sucesso.",
+    });
+    // Aqui você pode adicionar a lógica de logout real quando integrar com autenticação
+    console.log("Logout realizado");
+  };
 
   return (
     <div className="flex-1 space-y-6 p-6 bg-black min-h-screen">
@@ -66,6 +77,17 @@ export function Dashboard() {
             className={`text-white hover:bg-gray-800 ${isActive ? 'bg-orange-600 hover:bg-orange-500' : ''}`}
           >
             {isActive ? <BellRing className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
+          </Button>
+
+          {/* Botão de logout */}
+          <Button 
+            onClick={handleLogout}
+            variant="ghost" 
+            size="icon" 
+            className="text-white hover:bg-gray-800 hover:bg-red-600"
+            title="Sair do sistema"
+          >
+            <LogOut className="w-5 h-5" />
           </Button>
         </div>
       </div>
