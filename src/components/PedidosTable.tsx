@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -26,6 +25,18 @@ interface PedidosTableProps {
 }
 
 type Order = Tables<'orders'>;
+
+// Função para corrigir valores que estão em centavos
+const correctAmountDisplay = (amount: number | null): number => {
+  if (!amount) return 0;
+  
+  const numericAmount = Number(amount);
+  
+  // Se o valor parece estar em centavos (número inteiro >= 1000), converte
+  const isLikelyCents = Number.isInteger(numericAmount) && numericAmount >= 1000;
+  
+  return isLikelyCents ? numericAmount / 100 : numericAmount;
+};
 
 export function PedidosTable({ selectedPeriod }: PedidosTableProps) {
   const { orders, loading, error, refetch } = useOrders(selectedPeriod);
@@ -115,38 +126,55 @@ export function PedidosTable({ selectedPeriod }: PedidosTableProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {orders.map((order) => (
-                <TableRow key={order.id} className="border-gray-800 hover:bg-gray-800/50">
-                  <TableCell className="text-white font-medium">#{order.external_id}</TableCell>
-                  <TableCell className="text-white">{order.customer_name}</TableCell>
-                  <TableCell className="text-gray-300">
-                    {format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-                  </TableCell>
-                  <TableCell className="text-white font-semibold">
-                    R$ {Number(order.amount).toFixed(2).replace('.', ',')}
-                  </TableCell>
-                  <TableCell className="text-gray-300">{order.customer_email}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2 text-gray-300">
-                      {getPaymentIcon(order.payment_method)}
-                      {getPaymentLabel(order.payment_method)}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {getStatusBadge(order.status)}
-                  </TableCell>
-                  <TableCell>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white hover:bg-gray-800">
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                      </DialogTrigger>
-                      <OrderDetailsDialog order={order} />
-                    </Dialog>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {orders.map((order) => {
+                const correctedAmount = correctAmountDisplay(order.amount);
+                const originalAmount = Number(order.amount) || 0;
+                const wasConverted = (Number.isInteger(originalAmount) && originalAmount >= 1000);
+                
+                console.log(`💰 Exibindo valor do pedido ${order.external_id}:`, {
+                  original: originalAmount,
+                  corrected: correctedAmount,
+                  was_converted: wasConverted
+                });
+                
+                return (
+                  <TableRow key={order.id} className="border-gray-800 hover:bg-gray-800/50">
+                    <TableCell className="text-white font-medium">#{order.external_id}</TableCell>
+                    <TableCell className="text-white">{order.customer_name}</TableCell>
+                    <TableCell className="text-gray-300">
+                      {format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                    </TableCell>
+                    <TableCell className={`font-semibold ${wasConverted ? 'text-green-400' : 'text-white'}`}>
+                      R$ {correctedAmount.toFixed(2).replace('.', ',')}
+                      {wasConverted && (
+                        <span className="text-xs text-gray-400 block">
+                          (corrigido de R$ {originalAmount.toFixed(2).replace('.', ',')})
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-gray-300">{order.customer_email}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2 text-gray-300">
+                        {getPaymentIcon(order.payment_method)}
+                        {getPaymentLabel(order.payment_method)}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {getStatusBadge(order.status)}
+                    </TableCell>
+                    <TableCell>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white hover:bg-gray-800">
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <OrderDetailsDialog order={order} />
+                      </Dialog>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         ) : (
