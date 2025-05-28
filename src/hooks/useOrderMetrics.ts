@@ -71,8 +71,30 @@ export const useOrderMetrics = (selectedPeriod: string) => {
     
     const paidOrders = paidOrdersArray.length;
     
-    const pendingOrders = orders.filter(order => isPendingStatus(order.status)).length;
-    const cancelledOrders = orders.filter(order => isCancelledStatus(order.status)).length;
+    // Adicionar logs detalhados para pedidos pendentes
+    const pendingOrdersArray = orders.filter(order => {
+      const isPending = isPendingStatus(order.status);
+      console.log(`⏳ Pedido ${order.external_id} - Status: ${order.status}, É pendente?: ${isPending}`);
+      return isPending;
+    });
+    
+    const pendingOrders = pendingOrdersArray.length;
+    
+    const cancelledOrdersArray = orders.filter(order => {
+      const isCancelled = isCancelledStatus(order.status);
+      console.log(`❌ Pedido ${order.external_id} - Status: ${order.status}, É cancelado?: ${isCancelled}`);
+      return isCancelled;
+    });
+    
+    const cancelledOrders = cancelledOrdersArray.length;
+
+    console.log('📈 Contagem de pedidos por status:', {
+      total: totalOrders,
+      paid: paidOrders,
+      pending: pendingOrders,
+      cancelled: cancelledOrders,
+      sum_check: paidOrders + pendingOrders + cancelledOrders
+    });
 
     // Calcula receita dos pedidos pagos com correção automática
     const paidRevenue = paidOrdersArray.reduce((sum, order) => {
