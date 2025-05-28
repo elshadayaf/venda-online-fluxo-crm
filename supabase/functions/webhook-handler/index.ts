@@ -30,103 +30,271 @@ serve(async (req) => {
     );
 
     const requestBody = await req.json();
-    console.log('Received webhook data:', JSON.stringify(requestBody, null, 2));
+    console.log('🎯 WEBHOOK RECEBIDO - Dados completos:', JSON.stringify(requestBody, null, 2));
 
-    // Extract external_id with better fallback logic
-    const externalId = requestBody.external_id || 
-                      requestBody.id || 
-                      requestBody.order_id || 
-                      requestBody.transaction_id || 
-                      `WH-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    // Função para extrair valores numéricos de forma mais robusta
+    const extractNumericValue = (value: any): number => {
+      if (value === null || value === undefined || value === '') return 0;
+      
+      // Se já é um número
+      if (typeof value === 'number') return Math.max(0, value);
+      
+      // Se é string, tenta converter
+      if (typeof value === 'string') {
+        // Remove caracteres não numéricos exceto ponto e vírgula
+        const cleanValue = value.replace(/[^\d.,]/g, '');
+        // Substitui vírgula por ponto para conversão
+        const normalizedValue = cleanValue.replace(',', '.');
+        const parsed = parseFloat(normalizedValue);
+        return isNaN(parsed) ? 0 : Math.max(0, parsed);
+      }
+      
+      return 0;
+    };
 
-    // Extract order data from webhook payload with improved field mapping
+    // Função para extrair texto de forma mais robusta
+    const extractTextValue = (value: any, fallback: string = ''): string => {
+      if (value === null || value === undefined) return fallback;
+      return String(value).trim() || fallback;
+    };
+
+    // Extração melhorada do external_id
+    const externalId = extractTextValue(
+      requestBody.external_id || 
+      requestBody.id || 
+      requestBody.order_id || 
+      requestBody.transaction_id ||
+      requestBody.payment_id ||
+      requestBody.reference_id
+    ) || `WH-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+    console.log('🔍 External ID extraído:', externalId);
+
+    // Extração robusta do valor principal
+    const amountSources = [
+      requestBody.amount,
+      requestBody.value, 
+      requestBody.total,
+      requestBody.price,
+      requestBody.total_amount,
+      requestBody.order_value,
+      requestBody.transaction_amount
+    ];
+
+    let extractedAmount = 0;
+    for (const source of amountSources) {
+      const value = extractNumericValue(source);
+      if (value > 0) {
+        extractedAmount = value;
+        console.log('💰 Valor encontrado:', value, 'de:', source);
+        break;
+      }
+    }
+
+    // Extração do nome do cliente
+    const customerNameSources = [
+      requestBody.customer?.name,
+      requestBody.customer_name,
+      requestBody.payer?.name,
+      requestBody.buyer?.name,
+      requestBody.user?.name,
+      requestBody.name,
+      requestBody.customer?.full_name,
+      requestBody.full_name
+    ];
+
+    let extractedCustomerName = '';
+    for (const source of customerNameSources) {
+      const name = extractTextValue(source);
+      if (name && name !== 'Cliente Webhook' && name.length > 2) {
+        extractedCustomerName = name;
+        console.log('👤 Nome do cliente encontrado:', name);
+        break;
+      }
+    }
+
+    if (!extractedCustomerName) {
+      extractedCustomerName = `Cliente ${externalId.slice(-6)}`;
+    }
+
+    // Extração do email do cliente
+    const customerEmailSources = [
+      requestBody.customer?.email,
+      requestBody.customer_email,
+      requestBody.payer?.email,
+      requestBody.buyer?.email,
+      requestBody.user?.email,
+      requestBody.email
+    ];
+
+    let extractedCustomerEmail = '';
+    for (const source of customerEmailSources) {
+      const email = extractTextValue(source);
+      if (email && email.includes('@') && email !== 'webhook@exemplo.com') {
+        extractedCustomerEmail = email;
+        console.log('📧 Email do cliente encontrado:', email);
+        break;
+      }
+    }
+
+    if (!extractedCustomerEmail) {
+      extractedCustomerEmail = `cliente.${externalId.slice(-6).toLowerCase()}@exemplo.com`;
+    }
+
+    // Extração do método de pagamento
+    const paymentMethodSources = [
+      requestBody.payment_method,
+      requestBody.method,
+      requestBody.payment_type,
+      requestBody.type,
+      requestBody.payment?.method,
+      requestBody.payment?.type
+    ];
+
+    let extractedPaymentMethod = '';
+    for (const source of paymentMethodSources) {
+      const method = extractTextValue(source);
+      if (method && method !== 'webhook') {
+        extractedPaymentMethod = method;
+        console.log('💳 Método de pagamento encontrado:', method);
+        break;
+      }
+    }
+
+    if (!extractedPaymentMethod) {
+      extractedPaymentMethod = 'pix'; // Default mais comum
+    }
+
+    // Extração do status
+    const statusSources = [
+      requestBody.status,
+      requestBody.payment_status,
+      requestBody.order_status,
+      requestBody.state,
+      requestBody.payment?.status
+    ];
+
+    let extractedStatus = '';
+    for (const source of statusSources) {
+      const status = extractTextValue(source);
+      if (status && status !== 'pending') {
+        extractedStatus = status;
+        console.log('📊 Status encontrado:', status);
+        break;
+      }
+    }
+
+    if (!extractedStatus) {
+      extractedStatus = extractedAmount > 0 ? 'paid' : 'pending';
+    }
+
+    // Monta o objeto final com todos os dados extraídos
     const orderData = {
       external_id: externalId,
-      customer_name: requestBody.customer?.name || requestBody.customer_name || requestBody.payer?.name || 'Cliente Webhook',
-      customer_email: requestBody.customer?.email || requestBody.customer_email || requestBody.payer?.email || 'webhook@exemplo.com',
-      customer_phone: requestBody.customer?.phone || requestBody.customer_phone || requestBody.payer?.phone,
-      customer_document: requestBody.customer?.document || requestBody.customer_document || requestBody.payer?.document,
+      customer_name: extractedCustomerName,
+      customer_email: extractedCustomerEmail,
+      customer_phone: extractTextValue(
+        requestBody.customer?.phone || 
+        requestBody.customer_phone || 
+        requestBody.payer?.phone || 
+        requestBody.phone
+      ),
+      customer_document: extractTextValue(
+        requestBody.customer?.document || 
+        requestBody.customer_document || 
+        requestBody.payer?.document || 
+        requestBody.document
+      ),
       customer_birth_date: requestBody.customer?.birth_date || requestBody.customer_birth_date || requestBody.payer?.birth_date,
-      customer_gender: requestBody.customer?.gender || requestBody.customer_gender || requestBody.payer?.gender,
+      customer_gender: extractTextValue(
+        requestBody.customer?.gender || 
+        requestBody.customer_gender || 
+        requestBody.payer?.gender
+      ),
       
-      amount: Number(requestBody.amount || requestBody.value || requestBody.total || 0),
-      paid_amount: Number(requestBody.paid_amount || requestBody.amount || requestBody.value || requestBody.total || 0),
-      discount_amount: Number(requestBody.discount_amount || requestBody.discount || 0),
-      tax_amount: Number(requestBody.tax_amount || requestBody.tax || 0),
-      shipping_amount: Number(requestBody.shipping_amount || requestBody.shipping || 0),
-      refund_amount: Number(requestBody.refund_amount || requestBody.refund || 0),
+      amount: extractedAmount,
+      paid_amount: extractNumericValue(requestBody.paid_amount) || extractedAmount,
+      discount_amount: extractNumericValue(requestBody.discount_amount || requestBody.discount),
+      tax_amount: extractNumericValue(requestBody.tax_amount || requestBody.tax),
+      shipping_amount: extractNumericValue(requestBody.shipping_amount || requestBody.shipping),
+      refund_amount: extractNumericValue(requestBody.refund_amount || requestBody.refund),
       
-      payment_method: requestBody.payment_method || requestBody.method || requestBody.payment_type || 'webhook',
-      payment_gateway: requestBody.payment_gateway || requestBody.gateway || requestBody.provider,
-      transaction_id: requestBody.transaction_id || requestBody.gateway_transaction_id || requestBody.tid,
-      installments: Number(requestBody.installments || requestBody.parcelas || 1),
+      payment_method: extractedPaymentMethod,
+      payment_gateway: extractTextValue(requestBody.payment_gateway || requestBody.gateway || requestBody.provider),
+      transaction_id: extractTextValue(requestBody.transaction_id || requestBody.gateway_transaction_id || requestBody.tid),
+      installments: Math.max(1, extractNumericValue(requestBody.installments || requestBody.parcelas) || 1),
       
-      status: requestBody.status || 'pending',
-      paid_at: requestBody.paid_at ? new Date(requestBody.paid_at).toISOString() : null,
+      status: extractedStatus,
+      paid_at: requestBody.paid_at ? new Date(requestBody.paid_at).toISOString() : (extractedStatus.toLowerCase().includes('paid') ? new Date().toISOString() : null),
       due_date: requestBody.due_date ? new Date(requestBody.due_date).toISOString() : null,
       cancelled_at: requestBody.cancelled_at ? new Date(requestBody.cancelled_at).toISOString() : null,
-      cancelled_reason: requestBody.cancelled_reason || requestBody.cancel_reason,
+      cancelled_reason: extractTextValue(requestBody.cancelled_reason || requestBody.cancel_reason),
       expired_at: requestBody.expired_at ? new Date(requestBody.expired_at).toISOString() : null,
-      refund_reason: requestBody.refund_reason,
+      refund_reason: extractTextValue(requestBody.refund_reason),
       
-      // Address data with improved mapping
-      address_street: requestBody.address?.street || requestBody.customer?.address?.street || requestBody.payer?.address?.street,
-      address_number: requestBody.address?.number || requestBody.customer?.address?.number || requestBody.payer?.address?.number,
-      address_complement: requestBody.address?.complement || requestBody.customer?.address?.complement || requestBody.payer?.address?.complement,
-      address_neighborhood: requestBody.address?.neighborhood || requestBody.customer?.address?.neighborhood || requestBody.payer?.address?.neighborhood,
-      address_city: requestBody.address?.city || requestBody.customer?.address?.city || requestBody.payer?.address?.city,
-      address_state: requestBody.address?.state || requestBody.customer?.address?.state || requestBody.payer?.address?.state,
-      address_zip_code: requestBody.address?.zip_code || requestBody.customer?.address?.zip_code || requestBody.payer?.address?.zip_code,
-      address_country: requestBody.address?.country || requestBody.customer?.address?.country || requestBody.payer?.address?.country || 'Brasil',
+      // Address data
+      address_street: extractTextValue(requestBody.address?.street || requestBody.customer?.address?.street || requestBody.payer?.address?.street),
+      address_number: extractTextValue(requestBody.address?.number || requestBody.customer?.address?.number || requestBody.payer?.address?.number),
+      address_complement: extractTextValue(requestBody.address?.complement || requestBody.customer?.address?.complement || requestBody.payer?.address?.complement),
+      address_neighborhood: extractTextValue(requestBody.address?.neighborhood || requestBody.customer?.address?.neighborhood || requestBody.payer?.address?.neighborhood),
+      address_city: extractTextValue(requestBody.address?.city || requestBody.customer?.address?.city || requestBody.payer?.address?.city),
+      address_state: extractTextValue(requestBody.address?.state || requestBody.customer?.address?.state || requestBody.payer?.address?.state),
+      address_zip_code: extractTextValue(requestBody.address?.zip_code || requestBody.customer?.address?.zip_code || requestBody.payer?.address?.zip_code),
+      address_country: extractTextValue(requestBody.address?.country || requestBody.customer?.address?.country || requestBody.payer?.address?.country) || 'Brasil',
       
       // Billing address
-      billing_address_street: requestBody.billing_address?.street || requestBody.billing?.street,
-      billing_address_number: requestBody.billing_address?.number || requestBody.billing?.number,
-      billing_address_complement: requestBody.billing_address?.complement || requestBody.billing?.complement,
-      billing_address_neighborhood: requestBody.billing_address?.neighborhood || requestBody.billing?.neighborhood,
-      billing_address_city: requestBody.billing_address?.city || requestBody.billing?.city,
-      billing_address_state: requestBody.billing_address?.state || requestBody.billing?.state,
-      billing_address_zip_code: requestBody.billing_address?.zip_code || requestBody.billing?.zip_code,
-      billing_address_country: requestBody.billing_address?.country || requestBody.billing?.country,
+      billing_address_street: extractTextValue(requestBody.billing_address?.street || requestBody.billing?.street),
+      billing_address_number: extractTextValue(requestBody.billing_address?.number || requestBody.billing?.number),
+      billing_address_complement: extractTextValue(requestBody.billing_address?.complement || requestBody.billing?.complement),
+      billing_address_neighborhood: extractTextValue(requestBody.billing_address?.neighborhood || requestBody.billing?.neighborhood),
+      billing_address_city: extractTextValue(requestBody.billing_address?.city || requestBody.billing?.city),
+      billing_address_state: extractTextValue(requestBody.billing_address?.state || requestBody.billing?.state),
+      billing_address_zip_code: extractTextValue(requestBody.billing_address?.zip_code || requestBody.billing?.zip_code),
+      billing_address_country: extractTextValue(requestBody.billing_address?.country || requestBody.billing?.country),
       
       // Payment specific data
-      pix_key: requestBody.pix_key || requestBody.pix?.key || requestBody.qr_code_key,
-      barcode: requestBody.barcode || requestBody.boleto?.barcode || requestBody.payment_code,
-      payment_link: requestBody.payment_link || requestBody.checkout_url || requestBody.payment_url,
+      pix_key: extractTextValue(requestBody.pix_key || requestBody.pix?.key || requestBody.qr_code_key),
+      barcode: extractTextValue(requestBody.barcode || requestBody.boleto?.barcode || requestBody.payment_code),
+      payment_link: extractTextValue(requestBody.payment_link || requestBody.checkout_url || requestBody.payment_url),
       
       // Additional data
       items: requestBody.items ? JSON.stringify(requestBody.items) : null,
       metadata: requestBody.metadata ? JSON.stringify(requestBody.metadata) : JSON.stringify(requestBody),
-      secure_url: requestBody.secure_url || requestBody.checkout_url || requestBody.payment_url,
-      qr_code: requestBody.qr_code || requestBody.pix_qr_code || requestBody.qr_code_base64,
-      notes: requestBody.notes || requestBody.description || requestBody.comments,
+      secure_url: extractTextValue(requestBody.secure_url || requestBody.checkout_url || requestBody.payment_url),
+      qr_code: extractTextValue(requestBody.qr_code || requestBody.pix_qr_code || requestBody.qr_code_base64),
+      notes: extractTextValue(requestBody.notes || requestBody.description || requestBody.comments),
       tags: requestBody.tags || (requestBody.tags ? [requestBody.tags] : null),
       
       // Webhook tracking
-      webhook_source: requestBody.source || requestBody.webhook_source || 'unknown',
-      webhook_event: requestBody.event || requestBody.webhook_event || 'order_update',
+      webhook_source: extractTextValue(requestBody.source || requestBody.webhook_source) || 'unknown',
+      webhook_event: extractTextValue(requestBody.event || requestBody.webhook_event) || 'order_update',
     };
 
-    console.log('Processed order data:', JSON.stringify(orderData, null, 2));
-    console.log('Looking for existing order with external_id:', externalId);
+    console.log('✅ DADOS PROCESSADOS FINAL:', JSON.stringify({
+      external_id: orderData.external_id,
+      customer_name: orderData.customer_name,
+      customer_email: orderData.customer_email,
+      amount: orderData.amount,
+      payment_method: orderData.payment_method,
+      status: orderData.status
+    }, null, 2));
 
-    // Check if order already exists with better error handling
+    // Check if order already exists
     const { data: existingOrder, error: selectError } = await supabaseClient
       .from('orders')
-      .select('id, status, updated_at')
+      .select('id, status, updated_at, amount')
       .eq('external_id', externalId)
       .maybeSingle();
 
     if (selectError) {
-      console.error('Error checking for existing order:', selectError);
+      console.error('❌ Erro ao verificar pedido existente:', selectError);
       throw new Error(`Database query error: ${selectError.message}`);
     }
 
     let result;
     if (existingOrder) {
-      console.log('Found existing order:', existingOrder.id, 'with status:', existingOrder.status);
+      console.log('🔄 Atualizando pedido existente:', existingOrder.id, 'Valor atual:', existingOrder.amount, 'Novo valor:', orderData.amount);
       
-      // Update existing order with current timestamp
       const updateData = {
         ...orderData,
         updated_at: new Date().toISOString()
@@ -139,28 +307,27 @@ serve(async (req) => {
         .select();
 
       if (error) {
-        console.error('Error updating order:', error);
+        console.error('❌ Erro ao atualizar pedido:', error);
         throw new Error(`Update error: ${error.message}`);
       }
 
       result = { action: 'updated', data, previous_status: existingOrder.status };
-      console.log('Order updated successfully:', externalId, 'New status:', orderData.status);
+      console.log('✅ Pedido atualizado:', externalId, 'Status anterior:', existingOrder.status, 'Novo status:', orderData.status);
     } else {
-      console.log('No existing order found, creating new order');
+      console.log('➕ Criando novo pedido com valor:', orderData.amount);
       
-      // Insert new order
       const { data, error } = await supabaseClient
         .from('orders')
         .insert(orderData)
         .select();
 
       if (error) {
-        console.error('Error creating order:', error);
+        console.error('❌ Erro ao criar pedido:', error);
         throw new Error(`Insert error: ${error.message}`);
       }
 
       result = { action: 'created', data };
-      console.log('Order created successfully:', externalId);
+      console.log('✅ Novo pedido criado:', externalId, 'Valor:', orderData.amount);
     }
 
     const responseData = { 
@@ -168,7 +335,14 @@ serve(async (req) => {
       message: `Order ${result.action} successfully`,
       order_id: result.data?.[0]?.id,
       external_id: externalId,
-      action: result.action
+      action: result.action,
+      extracted_data: {
+        amount: orderData.amount,
+        customer_name: orderData.customer_name,
+        customer_email: orderData.customer_email,
+        payment_method: orderData.payment_method,
+        status: orderData.status
+      }
     };
 
     if (result.previous_status) {
@@ -176,7 +350,7 @@ serve(async (req) => {
       responseData.new_status = orderData.status;
     }
 
-    console.log('Webhook response:', responseData);
+    console.log('🎉 RESPOSTA FINAL DO WEBHOOK:', responseData);
 
     return new Response(
       JSON.stringify(responseData),
@@ -187,7 +361,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Webhook error:', error);
+    console.error('💥 ERRO NO WEBHOOK:', error);
     
     const errorResponse = { 
       error: 'Internal server error', 
