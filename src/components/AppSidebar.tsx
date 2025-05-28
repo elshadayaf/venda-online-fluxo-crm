@@ -8,7 +8,8 @@ import {
   TrendingUp,
   Users,
   Calendar,
-  Filter
+  Filter,
+  Package
 } from "lucide-react";
 import {
   Sidebar,
@@ -26,8 +27,13 @@ import {
 const menuItems = [
   {
     title: "Dashboard",
-    url: "#",
+    url: "/",
     icon: Home,
+  },
+  {
+    title: "Pedidos",
+    url: "/pedidos",
+    icon: Package,
   },
   {
     title: "Vendas",
