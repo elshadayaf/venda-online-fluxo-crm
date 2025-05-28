@@ -32,12 +32,19 @@ serve(async (req) => {
     const requestBody = await req.json();
     console.log('🎯 WEBHOOK RECEBIDO - Dados completos:', JSON.stringify(requestBody, null, 2));
 
-    // Função para extrair valores numéricos de forma mais robusta
+    // Função para extrair valores numéricos e detectar se está em centavos
     const extractNumericValue = (value: any): number => {
       if (value === null || value === undefined || value === '') return 0;
       
       // Se já é um número
-      if (typeof value === 'number') return Math.max(0, value);
+      if (typeof value === 'number') {
+        // Se o valor é muito alto (provavelmente em centavos), divide por 100
+        if (value >= 1000 && Number.isInteger(value)) {
+          console.log('💰 Valor detectado em centavos:', value, 'convertendo para:', value / 100);
+          return Math.max(0, value / 100);
+        }
+        return Math.max(0, value);
+      }
       
       // Se é string, tenta converter
       if (typeof value === 'string') {
@@ -46,7 +53,14 @@ serve(async (req) => {
         // Substitui vírgula por ponto para conversão
         const normalizedValue = cleanValue.replace(',', '.');
         const parsed = parseFloat(normalizedValue);
-        return isNaN(parsed) ? 0 : Math.max(0, parsed);
+        if (isNaN(parsed)) return 0;
+        
+        // Se o valor é muito alto (provavelmente em centavos), divide por 100
+        if (parsed >= 1000 && Number.isInteger(parsed)) {
+          console.log('💰 Valor string detectado em centavos:', parsed, 'convertendo para:', parsed / 100);
+          return Math.max(0, parsed / 100);
+        }
+        return Math.max(0, parsed);
       }
       
       return 0;
@@ -70,8 +84,11 @@ serve(async (req) => {
 
     console.log('🔍 External ID extraído:', externalId);
 
-    // Extração robusta do valor principal
+    // Extração robusta do valor principal - verifica primeiro no objeto data
     const amountSources = [
+      requestBody.data?.amount,
+      requestBody.data?.value,
+      requestBody.data?.total,
       requestBody.amount,
       requestBody.value, 
       requestBody.total,
@@ -83,16 +100,21 @@ serve(async (req) => {
 
     let extractedAmount = 0;
     for (const source of amountSources) {
-      const value = extractNumericValue(source);
-      if (value > 0) {
-        extractedAmount = value;
-        console.log('💰 Valor encontrado:', value, 'de:', source);
-        break;
+      if (source !== null && source !== undefined) {
+        const value = extractNumericValue(source);
+        if (value > 0) {
+          extractedAmount = value;
+          console.log('💰 Valor encontrado:', value, 'de:', source, 'valor original:', source);
+          break;
+        }
       }
     }
 
-    // Extração do nome do cliente
+    // Extração do nome do cliente - verifica primeiro no objeto data
     const customerNameSources = [
+      requestBody.data?.customer?.name,
+      requestBody.data?.customer_name,
+      requestBody.data?.payer?.name,
       requestBody.customer?.name,
       requestBody.customer_name,
       requestBody.payer?.name,
@@ -117,8 +139,11 @@ serve(async (req) => {
       extractedCustomerName = `Cliente ${externalId.slice(-6)}`;
     }
 
-    // Extração do email do cliente
+    // Extração do email do cliente - verifica primeiro no objeto data
     const customerEmailSources = [
+      requestBody.data?.customer?.email,
+      requestBody.data?.customer_email,
+      requestBody.data?.payer?.email,
       requestBody.customer?.email,
       requestBody.customer_email,
       requestBody.payer?.email,
@@ -143,6 +168,8 @@ serve(async (req) => {
 
     // Extração do método de pagamento
     const paymentMethodSources = [
+      requestBody.data?.payment_method,
+      requestBody.data?.method,
       requestBody.payment_method,
       requestBody.method,
       requestBody.payment_type,
@@ -167,6 +194,8 @@ serve(async (req) => {
 
     // Extração do status
     const statusSources = [
+      requestBody.data?.status,
+      requestBody.data?.payment_status,
       requestBody.status,
       requestBody.payment_status,
       requestBody.order_status,
@@ -194,43 +223,48 @@ serve(async (req) => {
       customer_name: extractedCustomerName,
       customer_email: extractedCustomerEmail,
       customer_phone: extractTextValue(
+        requestBody.data?.customer?.phone ||
+        requestBody.data?.customer_phone ||
         requestBody.customer?.phone || 
         requestBody.customer_phone || 
         requestBody.payer?.phone || 
         requestBody.phone
       ),
       customer_document: extractTextValue(
+        requestBody.data?.customer?.document ||
+        requestBody.data?.customer_document ||
         requestBody.customer?.document || 
         requestBody.customer_document || 
         requestBody.payer?.document || 
         requestBody.document
       ),
-      customer_birth_date: requestBody.customer?.birth_date || requestBody.customer_birth_date || requestBody.payer?.birth_date,
+      customer_birth_date: requestBody.data?.customer?.birth_date || requestBody.customer?.birth_date || requestBody.customer_birth_date || requestBody.payer?.birth_date,
       customer_gender: extractTextValue(
+        requestBody.data?.customer?.gender ||
         requestBody.customer?.gender || 
         requestBody.customer_gender || 
         requestBody.payer?.gender
       ),
       
       amount: extractedAmount,
-      paid_amount: extractNumericValue(requestBody.paid_amount) || extractedAmount,
-      discount_amount: extractNumericValue(requestBody.discount_amount || requestBody.discount),
-      tax_amount: extractNumericValue(requestBody.tax_amount || requestBody.tax),
-      shipping_amount: extractNumericValue(requestBody.shipping_amount || requestBody.shipping),
-      refund_amount: extractNumericValue(requestBody.refund_amount || requestBody.refund),
+      paid_amount: extractNumericValue(requestBody.data?.paid_amount || requestBody.paid_amount) || extractedAmount,
+      discount_amount: extractNumericValue(requestBody.data?.discount_amount || requestBody.discount_amount || requestBody.discount),
+      tax_amount: extractNumericValue(requestBody.data?.tax_amount || requestBody.tax_amount || requestBody.tax),
+      shipping_amount: extractNumericValue(requestBody.data?.shipping_amount || requestBody.shipping_amount || requestBody.shipping),
+      refund_amount: extractNumericValue(requestBody.data?.refund_amount || requestBody.refund_amount || requestBody.refund),
       
       payment_method: extractedPaymentMethod,
-      payment_gateway: extractTextValue(requestBody.payment_gateway || requestBody.gateway || requestBody.provider),
-      transaction_id: extractTextValue(requestBody.transaction_id || requestBody.gateway_transaction_id || requestBody.tid),
-      installments: Math.max(1, extractNumericValue(requestBody.installments || requestBody.parcelas) || 1),
+      payment_gateway: extractTextValue(requestBody.data?.payment_gateway || requestBody.payment_gateway || requestBody.gateway || requestBody.provider),
+      transaction_id: extractTextValue(requestBody.data?.transaction_id || requestBody.transaction_id || requestBody.gateway_transaction_id || requestBody.tid),
+      installments: Math.max(1, extractNumericValue(requestBody.data?.installments || requestBody.installments || requestBody.parcelas) || 1),
       
       status: extractedStatus,
-      paid_at: requestBody.paid_at ? new Date(requestBody.paid_at).toISOString() : (extractedStatus.toLowerCase().includes('paid') ? new Date().toISOString() : null),
-      due_date: requestBody.due_date ? new Date(requestBody.due_date).toISOString() : null,
-      cancelled_at: requestBody.cancelled_at ? new Date(requestBody.cancelled_at).toISOString() : null,
-      cancelled_reason: extractTextValue(requestBody.cancelled_reason || requestBody.cancel_reason),
-      expired_at: requestBody.expired_at ? new Date(requestBody.expired_at).toISOString() : null,
-      refund_reason: extractTextValue(requestBody.refund_reason),
+      paid_at: (requestBody.data?.paid_at || requestBody.paid_at) ? new Date(requestBody.data?.paid_at || requestBody.paid_at).toISOString() : (extractedStatus.toLowerCase().includes('paid') ? new Date().toISOString() : null),
+      due_date: (requestBody.data?.due_date || requestBody.due_date) ? new Date(requestBody.data?.due_date || requestBody.due_date).toISOString() : null,
+      cancelled_at: (requestBody.data?.cancelled_at || requestBody.cancelled_at) ? new Date(requestBody.data?.cancelled_at || requestBody.cancelled_at).toISOString() : null,
+      cancelled_reason: extractTextValue(requestBody.data?.cancelled_reason || requestBody.cancelled_reason || requestBody.cancel_reason),
+      expired_at: (requestBody.data?.expired_at || requestBody.expired_at) ? new Date(requestBody.data?.expired_at || requestBody.expired_at).toISOString() : null,
+      refund_reason: extractTextValue(requestBody.data?.refund_reason || requestBody.refund_reason),
       
       // Address data
       address_street: extractTextValue(requestBody.address?.street || requestBody.customer?.address?.street || requestBody.payer?.address?.street),
@@ -253,16 +287,16 @@ serve(async (req) => {
       billing_address_country: extractTextValue(requestBody.billing_address?.country || requestBody.billing?.country),
       
       // Payment specific data
-      pix_key: extractTextValue(requestBody.pix_key || requestBody.pix?.key || requestBody.qr_code_key),
-      barcode: extractTextValue(requestBody.barcode || requestBody.boleto?.barcode || requestBody.payment_code),
-      payment_link: extractTextValue(requestBody.payment_link || requestBody.checkout_url || requestBody.payment_url),
+      pix_key: extractTextValue(requestBody.data?.pix_key || requestBody.pix_key || requestBody.pix?.key || requestBody.qr_code_key),
+      barcode: extractTextValue(requestBody.data?.barcode || requestBody.barcode || requestBody.boleto?.barcode || requestBody.payment_code),
+      payment_link: extractTextValue(requestBody.data?.payment_link || requestBody.payment_link || requestBody.checkout_url || requestBody.payment_url),
       
       // Additional data
       items: requestBody.items ? JSON.stringify(requestBody.items) : null,
       metadata: requestBody.metadata ? JSON.stringify(requestBody.metadata) : JSON.stringify(requestBody),
-      secure_url: extractTextValue(requestBody.secure_url || requestBody.checkout_url || requestBody.payment_url),
-      qr_code: extractTextValue(requestBody.qr_code || requestBody.pix_qr_code || requestBody.qr_code_base64),
-      notes: extractTextValue(requestBody.notes || requestBody.description || requestBody.comments),
+      secure_url: extractTextValue(requestBody.data?.secure_url || requestBody.secure_url || requestBody.checkout_url || requestBody.payment_url),
+      qr_code: extractTextValue(requestBody.data?.qr_code || requestBody.qr_code || requestBody.pix_qr_code || requestBody.qr_code_base64),
+      notes: extractTextValue(requestBody.data?.notes || requestBody.notes || requestBody.description || requestBody.comments),
       tags: requestBody.tags || (requestBody.tags ? [requestBody.tags] : null),
       
       // Webhook tracking
