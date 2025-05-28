@@ -35,8 +35,25 @@ export const useOrders = (selectedPeriod: string) => {
       setLoading(true);
       setError(null);
       
-      const dateFilter = getDateFilter(selectedPeriod);
+      console.log('🔍 Buscando pedidos para o período:', selectedPeriod);
       
+      const dateFilter = getDateFilter(selectedPeriod);
+      console.log('📅 Filtro de data:', dateFilter);
+      
+      // Primeiro, vamos buscar TODOS os pedidos para verificar se existem dados
+      const { data: allOrders, error: allOrdersError } = await supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (allOrdersError) {
+        console.error('❌ Erro ao buscar todos os pedidos:', allOrdersError);
+      } else {
+        console.log('📊 Total de pedidos na base:', allOrders?.length || 0);
+        console.log('📝 Primeiros 3 pedidos:', allOrders?.slice(0, 3));
+      }
+
+      // Agora buscar com filtro de período
       let query = supabase
         .from('orders')
         .select('*')
@@ -48,21 +65,32 @@ export const useOrders = (selectedPeriod: string) => {
         const startOfYesterday = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
         const endOfYesterday = new Date(startOfYesterday.getTime() + 24 * 60 * 60 * 1000 - 1);
         
+        console.log('📅 Período ontem - início:', startOfYesterday.toISOString());
+        console.log('📅 Período ontem - fim:', endOfYesterday.toISOString());
+        
         query = query
           .gte('created_at', startOfYesterday.toISOString())
           .lte('created_at', endOfYesterday.toISOString());
       } else {
+        console.log('📅 Filtro aplicado - maior que:', dateFilter);
         query = query.gte('created_at', dateFilter);
       }
 
       const { data, error } = await query;
       
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro na consulta filtrada:', error);
+        throw error;
+      }
+      
+      console.log('✅ Pedidos encontrados com filtro:', data?.length || 0);
+      console.log('📋 Dados dos pedidos:', data);
       
       setOrders(data || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao carregar pedidos');
-      console.error('Erro ao buscar pedidos:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar pedidos';
+      console.error('💥 Erro geral:', errorMessage);
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -81,8 +109,8 @@ export const useOrders = (selectedPeriod: string) => {
           schema: 'public',
           table: 'orders'
         },
-        () => {
-          console.log('Ordem atualizada, recarregando dados...');
+        (payload) => {
+          console.log('🔄 Ordem atualizada em tempo real:', payload);
           fetchOrders();
         }
       )

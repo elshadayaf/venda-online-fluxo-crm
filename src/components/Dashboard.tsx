@@ -7,6 +7,7 @@ import { HourlySalesChart } from "@/components/HourlySalesChart";
 import { PaymentMethodChart } from "@/components/PaymentMethodChart";
 import { RecentSales } from "@/components/RecentSales";
 import { FilterTabs } from "@/components/FilterTabs";
+import { DebugPanel } from "@/components/DebugPanel";
 import { Bell, BellRing, BellOff, Volume2, VolumeX, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -88,6 +89,9 @@ export function Dashboard() {
 
       {/* Metric Cards */}
       <MetricCards selectedPeriod={selectedPeriod} />
+
+      {/* Debug Panel - só aparece em desenvolvimento */}
+      <DebugPanel />
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

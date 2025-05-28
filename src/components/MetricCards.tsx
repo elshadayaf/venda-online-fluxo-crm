@@ -11,6 +11,9 @@ interface MetricCardsProps {
 export function MetricCards({ selectedPeriod }: MetricCardsProps) {
   const { metrics, loading } = useOrderMetrics(selectedPeriod);
 
+  // Log das métricas para debug
+  console.log('📊 Métricas calculadas para', selectedPeriod, ':', metrics);
+
   const formatPercentage = (value: number) => {
     return `${value.toFixed(1)}%`;
   };
@@ -38,6 +41,7 @@ export function MetricCards({ selectedPeriod }: MetricCardsProps) {
     {
       title: "Total de Vendas",
       value: formatCurrency(metrics.totalRevenue),
+      subtitle: `${metrics.totalOrders} pedidos`,
       change: "+12.5%", // TODO: Calculate real change
       trend: "up" as const,
       icon: DollarSign,
@@ -46,6 +50,7 @@ export function MetricCards({ selectedPeriod }: MetricCardsProps) {
     {
       title: "Vendas Pagas",
       value: formatCurrency(metrics.paidRevenue),
+      subtitle: `${metrics.paidOrders} pagos`,
       change: "+8.2%", // TODO: Calculate real change
       trend: "up" as const,
       icon: ShoppingCart,
@@ -54,6 +59,7 @@ export function MetricCards({ selectedPeriod }: MetricCardsProps) {
     {
       title: "Pedidos Pendentes",
       value: metrics.pendingOrders.toString(),
+      subtitle: "aguardando pagamento",
       change: "-2.1%", // TODO: Calculate real change
       trend: "down" as const,
       icon: Clock,
@@ -62,6 +68,7 @@ export function MetricCards({ selectedPeriod }: MetricCardsProps) {
     {
       title: "Taxa de Conversão",
       value: formatPercentage(metrics.conversionRate),
+      subtitle: "pedidos convertidos",
       change: "+0.5%", // TODO: Calculate real change
       trend: "up" as const,
       icon: CreditCard,
@@ -70,6 +77,7 @@ export function MetricCards({ selectedPeriod }: MetricCardsProps) {
     {
       title: "Ticket Médio",
       value: formatCurrency(metrics.averageOrderValue),
+      subtitle: "valor por pedido",
       change: "+5.8%", // TODO: Calculate real change
       trend: "up" as const,
       icon: TrendingUp,
@@ -90,8 +98,11 @@ export function MetricCards({ selectedPeriod }: MetricCardsProps) {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white mb-2">
+            <div className="text-2xl font-bold text-white mb-1">
               {card.value}
+            </div>
+            <div className="text-xs text-gray-500 mb-2">
+              {card.subtitle}
             </div>
             <div className="flex items-center text-sm">
               {card.trend === "up" ? (
@@ -102,7 +113,7 @@ export function MetricCards({ selectedPeriod }: MetricCardsProps) {
               <span className={card.trend === "up" ? "text-green-400" : "text-red-400"}>
                 {card.change}
               </span>
-              <span className="text-gray-500 ml-1">vs período anterior</span>
+              <span className="text-gray-500 ml-1">vs anterior</span>
             </div>
           </CardContent>
         </Card>

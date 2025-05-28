@@ -3,6 +3,7 @@ import { useState } from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { FilterTabs } from "@/components/FilterTabs";
 import { PedidosTable } from "@/components/PedidosTable";
+import { DebugPanel } from "@/components/DebugPanel";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
@@ -37,6 +38,9 @@ export function PedidosContent() {
 
       {/* Filter Tabs */}
       <FilterTabs selectedPeriod={selectedPeriod} onPeriodChange={setSelectedPeriod} />
+
+      {/* Debug Panel */}
+      <DebugPanel />
 
       {/* Orders Table */}
       <PedidosTable selectedPeriod={selectedPeriod} />
