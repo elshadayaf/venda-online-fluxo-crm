@@ -9,6 +9,72 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      cost_settings: {
+        Row: {
+          advertising_cost: number | null
+          checkout_fee_percentage: number | null
+          created_at: string
+          credit_card_fee_10x: number | null
+          credit_card_fee_11x: number | null
+          credit_card_fee_12x: number | null
+          credit_card_fee_1x: number | null
+          credit_card_fee_2x: number | null
+          credit_card_fee_3x: number | null
+          credit_card_fee_4x: number | null
+          credit_card_fee_5x: number | null
+          credit_card_fee_6x: number | null
+          credit_card_fee_7x: number | null
+          credit_card_fee_8x: number | null
+          credit_card_fee_9x: number | null
+          id: string
+          pix_gateway_fee_percentage: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          advertising_cost?: number | null
+          checkout_fee_percentage?: number | null
+          created_at?: string
+          credit_card_fee_10x?: number | null
+          credit_card_fee_11x?: number | null
+          credit_card_fee_12x?: number | null
+          credit_card_fee_1x?: number | null
+          credit_card_fee_2x?: number | null
+          credit_card_fee_3x?: number | null
+          credit_card_fee_4x?: number | null
+          credit_card_fee_5x?: number | null
+          credit_card_fee_6x?: number | null
+          credit_card_fee_7x?: number | null
+          credit_card_fee_8x?: number | null
+          credit_card_fee_9x?: number | null
+          id?: string
+          pix_gateway_fee_percentage?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          advertising_cost?: number | null
+          checkout_fee_percentage?: number | null
+          created_at?: string
+          credit_card_fee_10x?: number | null
+          credit_card_fee_11x?: number | null
+          credit_card_fee_12x?: number | null
+          credit_card_fee_1x?: number | null
+          credit_card_fee_2x?: number | null
+          credit_card_fee_3x?: number | null
+          credit_card_fee_4x?: number | null
+          credit_card_fee_5x?: number | null
+          credit_card_fee_6x?: number | null
+          credit_card_fee_7x?: number | null
+          credit_card_fee_8x?: number | null
+          credit_card_fee_9x?: number | null
+          id?: string
+          pix_gateway_fee_percentage?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           address_city: string | null
