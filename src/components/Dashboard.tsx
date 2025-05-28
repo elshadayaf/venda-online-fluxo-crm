@@ -6,12 +6,14 @@ import { SalesChart } from "@/components/SalesChart";
 import { PaymentMethodChart } from "@/components/PaymentMethodChart";
 import { RecentSales } from "@/components/RecentSales";
 import { FilterTabs } from "@/components/FilterTabs";
-import { Bell, Search } from "lucide-react";
+import { Bell, Search, BellRing, BellOff, Zap } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useNotifications } from "@/hooks/useNotifications";
 
 export function Dashboard() {
   const [selectedPeriod, setSelectedPeriod] = useState("today");
+  const { isActive, toggleNotifications, simulateSale } = useNotifications();
 
   return (
     <div className="flex-1 space-y-6 p-6 bg-black min-h-screen">
@@ -32,8 +34,26 @@ export function Dashboard() {
               className="pl-10 w-64 bg-gray-900 border-gray-700 text-white placeholder-gray-400"
             />
           </div>
-          <Button variant="ghost" size="icon" className="text-white hover:bg-gray-800">
-            <Bell className="w-5 h-5" />
+          
+          {/* Botão para simular venda */}
+          <Button
+            onClick={simulateSale}
+            variant="outline"
+            size="sm"
+            className="bg-orange-600 border-orange-500 text-white hover:bg-orange-500 hover:border-orange-400"
+          >
+            <Zap className="w-4 h-4 mr-2" />
+            Simular Venda
+          </Button>
+          
+          {/* Botão de notificações */}
+          <Button 
+            onClick={toggleNotifications}
+            variant="ghost" 
+            size="icon" 
+            className={`text-white hover:bg-gray-800 ${isActive ? 'bg-orange-600 hover:bg-orange-500' : ''}`}
+          >
+            {isActive ? <BellRing className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
           </Button>
         </div>
       </div>
