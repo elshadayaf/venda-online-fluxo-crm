@@ -7,8 +7,7 @@ import { HourlySalesChart } from "@/components/HourlySalesChart";
 import { PaymentMethodChart } from "@/components/PaymentMethodChart";
 import { RecentSales } from "@/components/RecentSales";
 import { FilterTabs } from "@/components/FilterTabs";
-import { Bell, Search, BellRing, BellOff, Zap, Volume2, VolumeX, LogOut } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Bell, BellRing, BellOff, Volume2, VolumeX, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useToast } from "@/hooks/use-toast";
@@ -16,7 +15,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 export function Dashboard() {
   const [selectedPeriod, setSelectedPeriod] = useState("today");
-  const { isActive, toggleNotifications, simulateSale, isSoundEnabled, toggleSound } = useNotifications();
+  const { isActive, toggleNotifications, isSoundEnabled, toggleSound } = useNotifications();
   const { toast } = useToast();
   const { signOut, user } = useAuth();
 
@@ -50,25 +49,6 @@ export function Dashboard() {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input 
-              placeholder="Buscar..." 
-              className="pl-10 w-64 bg-gray-900 border-gray-700 text-white placeholder-gray-400"
-            />
-          </div>
-          
-          {/* Botão para simular venda */}
-          <Button
-            onClick={simulateSale}
-            variant="outline"
-            size="sm"
-            className="bg-orange-600 border-orange-500 text-white hover:bg-orange-500 hover:border-orange-400"
-          >
-            <Zap className="w-4 h-4 mr-2" />
-            Simular Venda
-          </Button>
-          
           {/* Botão de controle de som */}
           <Button 
             onClick={toggleSound}
