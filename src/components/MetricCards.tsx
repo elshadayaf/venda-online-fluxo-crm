@@ -57,9 +57,9 @@ export function MetricCards({ selectedPeriod }: MetricCardsProps) {
       color: "from-cyan-400 to-cyan-500",
     },
     {
-      title: "Pedidos Pendentes",
-      value: metrics.pendingOrders.toString(),
-      subtitle: "aguardando pagamento",
+      title: "Valor Vendas Pendentes",
+      value: formatCurrency(metrics.pendingRevenue),
+      subtitle: `${metrics.pendingOrders} pedidos pendentes`,
       change: "-2.1%", // TODO: Calculate real change
       trend: "down" as const,
       icon: Clock,

@@ -16,6 +16,7 @@ export const useOrderMetrics = (selectedPeriod: string) => {
         averageOrderValue: 0,
         paidOrders: 0,
         pendingOrders: 0,
+        pendingRevenue: 0,
         cancelledOrders: 0,
         conversionRate: 0,
         paidRevenue: 0
@@ -80,6 +81,22 @@ export const useOrderMetrics = (selectedPeriod: string) => {
     
     const pendingOrders = pendingOrdersArray.length;
     
+    // Calcular valor das vendas pendentes
+    const pendingRevenue = pendingOrdersArray.reduce((sum, order) => {
+      const amount = Number(order.amount) || 0;
+      
+      // Se o valor parece estar em centavos (número inteiro >= 1000), converte
+      const correctedAmount = (Number.isInteger(amount) && amount >= 1000) ? amount / 100 : amount;
+      
+      console.log(`⏳ Valor pendente do pedido ${order.external_id}:`, {
+        original: amount,
+        corrected: correctedAmount,
+        was_converted: (Number.isInteger(amount) && amount >= 1000)
+      });
+      
+      return sum + correctedAmount;
+    }, 0);
+    
     const cancelledOrdersArray = orders.filter(order => {
       const isCancelled = isCancelledStatus(order.status);
       console.log(`❌ Pedido ${order.external_id} - Status: ${order.status}, É cancelado?: ${isCancelled}`);
@@ -121,6 +138,7 @@ export const useOrderMetrics = (selectedPeriod: string) => {
       averageOrderValue,
       paidOrders,
       pendingOrders,
+      pendingRevenue,
       cancelledOrders,
       conversionRate,
       paidRevenue
