@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { MetricCards } from "@/components/MetricCards";
@@ -13,9 +12,9 @@ import { Button } from "@/components/ui/button";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { useOrders } from "@/hooks/useOrders";
 import { useTheme } from "@/hooks/useTheme";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { useRefresh } from "@/contexts/RefreshContext";
 
 export function Dashboard() {
   const [selectedPeriod, setSelectedPeriod] = useState("today");
@@ -24,18 +23,26 @@ export function Dashboard() {
   const { isActive, toggleNotifications, isSoundEnabled, toggleSound } = useNotifications();
   const { toast } = useToast();
   const { signOut, user } = useAuth();
-  const { refetch } = useOrders(selectedPeriod);
   const { toggleTheme } = useTheme();
+  const { triggerRefresh } = useRefresh();
 
   const handleRefresh = async () => {
+    console.log('🔄 Iniciando refresh do dashboard...');
     setIsRefreshing(true);
     try {
-      await refetch();
+      // Dispara o refresh global que irá atualizar todos os componentes
+      triggerRefresh();
+      
+      // Aguarda um pouco para dar tempo dos dados serem carregados
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       toast({
         title: "Dados atualizados",
         description: "O dashboard foi atualizado com os dados mais recentes.",
       });
+      console.log('✅ Refresh do dashboard concluído');
     } catch (error) {
+      console.error('❌ Erro durante refresh:', error);
       toast({
         title: "Erro ao atualizar",
         description: "Ocorreu um erro ao atualizar os dados.",

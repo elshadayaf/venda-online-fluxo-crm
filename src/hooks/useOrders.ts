@@ -1,7 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
+import { useRefresh } from '@/contexts/RefreshContext';
 
 type Order = Tables<'orders'>;
 
@@ -9,6 +9,7 @@ export const useOrders = (selectedPeriod: string) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { refreshTrigger } = useRefresh();
 
   const getDateFilter = (period: string) => {
     const now = new Date();
@@ -97,6 +98,7 @@ export const useOrders = (selectedPeriod: string) => {
   };
 
   useEffect(() => {
+    console.log('🔄 useOrders: Detectado mudança - período:', selectedPeriod, 'refresh trigger:', refreshTrigger);
     fetchOrders();
 
     // Set up real-time subscription
@@ -119,7 +121,7 @@ export const useOrders = (selectedPeriod: string) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [selectedPeriod]);
+  }, [selectedPeriod, refreshTrigger]);
 
   return { orders, loading, error, refetch: fetchOrders };
 };
