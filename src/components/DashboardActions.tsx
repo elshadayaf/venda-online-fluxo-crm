@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Bell, BellRing, BellOff, Volume2, VolumeX, LogOut, RefreshCw, Keyboard } from "lucide-react";
+import { Volume2, VolumeX, LogOut, RefreshCw, Keyboard } from "lucide-react";
 
 interface DashboardActionsProps {
   showShortcuts: boolean;
@@ -10,8 +10,6 @@ interface DashboardActionsProps {
   onRefresh: () => void;
   isSoundEnabled: boolean;
   onToggleSound: () => void;
-  isNotificationsActive: boolean;
-  onToggleNotifications: () => void;
   onLogout: () => void;
 }
 
@@ -22,8 +20,6 @@ export function DashboardActions({
   onRefresh,
   isSoundEnabled,
   onToggleSound,
-  isNotificationsActive,
-  onToggleNotifications,
   onLogout
 }: DashboardActionsProps) {
   return (
@@ -62,26 +58,9 @@ export function DashboardActions({
         className={`text-white hover:bg-gray-800 transition-all duration-200 hover:scale-105 ${
           isSoundEnabled ? 'bg-green-600 hover:bg-green-500' : ''
         }`}
-        title={isSoundEnabled ? 'Som ativado' : 'Som desativado'}
+        title={isSoundEnabled ? 'Som ativado (notificações sempre ativas)' : 'Som desativado (notificações sempre ativas)'}
       >
         {isSoundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
-      </Button>
-      
-      {/* Botão de notificações */}
-      <Button 
-        onClick={onToggleNotifications}
-        variant="ghost" 
-        size="icon" 
-        className={`text-white hover:bg-gray-800 transition-all duration-200 hover:scale-105 ${
-          isNotificationsActive ? 'bg-orange-600 hover:bg-orange-500' : ''
-        }`}
-        title="Notificações"
-      >
-        {isNotificationsActive ? (
-          <BellRing className="w-5 h-5 animate-pulse" />
-        ) : (
-          <BellOff className="w-5 h-5" />
-        )}
       </Button>
 
       {/* Botão de logout */}

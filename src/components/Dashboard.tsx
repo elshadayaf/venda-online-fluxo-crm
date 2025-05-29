@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { MetricCards } from "@/components/MetricCards";
 import { SalesChart } from "@/components/SalesChart";
@@ -20,7 +19,7 @@ export function Dashboard() {
   const [selectedPeriod, setSelectedPeriod] = useState("today");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
-  const { isActive, toggleNotifications, isSoundEnabled, toggleSound } = useNotifications();
+  const { isSoundEnabled, toggleSound } = useNotifications();
   const { toast } = useToast();
   const { signOut, user } = useAuth();
   const { toggleTheme } = useTheme();
@@ -94,8 +93,6 @@ export function Dashboard() {
           onRefresh={handleRefresh}
           isSoundEnabled={isSoundEnabled}
           onToggleSound={toggleSound}
-          isNotificationsActive={isActive}
-          onToggleNotifications={toggleNotifications}
           onLogout={handleLogout}
         />
       </div>

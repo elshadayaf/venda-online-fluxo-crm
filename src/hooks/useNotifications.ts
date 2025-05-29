@@ -8,14 +8,11 @@ import { Tables } from '@/integrations/supabase/types';
 type Order = Tables<'orders'>;
 
 export function useNotifications() {
-  const [isActive, setIsActive] = useState(false);
   const { isSoundEnabled, toggleSound, playCashRegisterSound } = useAudio();
 
-  // Escutar mudanças em tempo real na tabela de pedidos
+  // Escutar mudanças em tempo real na tabela de pedidos (sempre ativo)
   useEffect(() => {
-    if (!isActive) return;
-
-    console.log('Ativando notificações de pedidos em tempo real');
+    console.log('Ativando notificações de pedidos em tempo real (sempre ativo)');
 
     const channel = supabase
       .channel('order-notifications')
@@ -37,7 +34,7 @@ export function useNotifications() {
       console.log('Desativando notificações de pedidos');
       supabase.removeChannel(channel);
     };
-  }, [isActive]);
+  }, []); // Removido isActive da dependência
 
   const handleOrderNotification = (payload: any) => {
     const { eventType, new: newOrder, old: oldOrder } = payload;
@@ -77,8 +74,8 @@ export function useNotifications() {
       description = `${order.customer_name} - ${amount} - Status: ${statusText}`;
     }
     
-    // Tocar som apenas para pedidos pagos
-    if (isPaid) {
+    // Tocar som apenas para pedidos pagos e se som estiver ativado
+    if (isPaid && isSoundEnabled) {
       playCashRegisterSound();
     }
     
@@ -87,23 +84,6 @@ export function useNotifications() {
       description,
       duration: 5000,
     });
-  };
-
-  const toggleNotifications = () => {
-    setIsActive(!isActive);
-    if (!isActive) {
-      toast({
-        title: "🔔 Notificações Ativadas",
-        description: "Você receberá notificações de pedidos em tempo real",
-        duration: 3000,
-      });
-    } else {
-      toast({
-        title: "🔕 Notificações Desativadas",
-        description: "Notificações de pedidos foram pausadas",
-        duration: 3000,
-      });
-    }
   };
 
   // Função para simular um pedido (manter para testes)
@@ -138,8 +118,6 @@ export function useNotifications() {
   };
 
   return {
-    isActive,
-    toggleNotifications,
     simulateSale,
     isSoundEnabled,
     toggleSound
