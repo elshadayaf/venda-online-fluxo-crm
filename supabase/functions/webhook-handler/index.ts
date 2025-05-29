@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -70,6 +69,60 @@ serve(async (req) => {
     const extractTextValue = (value: any, fallback: string = ''): string => {
       if (value === null || value === undefined) return fallback;
       return String(value).trim() || fallback;
+    };
+
+    // Função específica para extrair e normalizar método de pagamento
+    const extractPaymentMethod = (requestBody: any): string => {
+      // Lista de possíveis campos que podem conter o método de pagamento
+      const paymentMethodSources = [
+        requestBody.data?.payment_method,
+        requestBody.data?.paymentMethod,
+        requestBody.data?.method,
+        requestBody.payment_method,
+        requestBody.paymentMethod,
+        requestBody.method,
+        requestBody.payment_type,
+        requestBody.type,
+        requestBody.payment?.method,
+        requestBody.payment?.type
+      ];
+
+      let rawMethod = '';
+      for (const source of paymentMethodSources) {
+        const method = extractTextValue(source);
+        if (method && method !== 'webhook' && method !== 'transaction') {
+          rawMethod = method;
+          console.log('💳 Método de pagamento bruto encontrado:', method);
+          break;
+        }
+      }
+
+      // Se não encontrou método específico, tenta extrair do tipo de transação
+      if (!rawMethod) {
+        const transactionType = extractTextValue(requestBody.type);
+        console.log('🔍 Tipo de transação encontrado:', transactionType);
+        rawMethod = transactionType;
+      }
+
+      // Normaliza o método de pagamento
+      const lowerMethod = rawMethod.toLowerCase();
+      
+      if (lowerMethod.includes('pix')) {
+        console.log('✅ Método identificado como PIX');
+        return 'pix';
+      } else if (lowerMethod.includes('card') || lowerMethod.includes('cartao') || lowerMethod.includes('credit') || lowerMethod.includes('credito')) {
+        console.log('✅ Método identificado como Cartão de Crédito');
+        return 'cartao_credito';
+      } else if (lowerMethod.includes('debit') || lowerMethod.includes('debito')) {
+        console.log('✅ Método identificado como Cartão de Débito');
+        return 'cartao_debito';
+      } else if (lowerMethod.includes('boleto')) {
+        console.log('✅ Método identificado como Boleto');
+        return 'boleto';
+      } else {
+        console.log('⚠️ Método não identificado, usando valor original:', rawMethod || 'outros');
+        return rawMethod || 'outros';
+      }
     };
 
     // Extração melhorada do external_id
@@ -166,31 +219,8 @@ serve(async (req) => {
       extractedCustomerEmail = `cliente.${externalId.slice(-6).toLowerCase()}@exemplo.com`;
     }
 
-    // Extração do método de pagamento
-    const paymentMethodSources = [
-      requestBody.data?.payment_method,
-      requestBody.data?.method,
-      requestBody.payment_method,
-      requestBody.method,
-      requestBody.payment_type,
-      requestBody.type,
-      requestBody.payment?.method,
-      requestBody.payment?.type
-    ];
-
-    let extractedPaymentMethod = '';
-    for (const source of paymentMethodSources) {
-      const method = extractTextValue(source);
-      if (method && method !== 'webhook') {
-        extractedPaymentMethod = method;
-        console.log('💳 Método de pagamento encontrado:', method);
-        break;
-      }
-    }
-
-    if (!extractedPaymentMethod) {
-      extractedPaymentMethod = 'pix'; // Default mais comum
-    }
+    // Extração do método de pagamento usando a função específica
+    const extractedPaymentMethod = extractPaymentMethod(requestBody);
 
     // Extração do status
     const statusSources = [

@@ -71,7 +71,7 @@ export const getPaymentIcon = (method: string) => {
   
   if (lowerMethod.includes('pix')) {
     return <Smartphone className="w-4 h-4" />;
-  } else if (lowerMethod.includes('card') || lowerMethod.includes('cartao') || lowerMethod.includes('credit')) {
+  } else if (lowerMethod.includes('cartao') || lowerMethod.includes('card') || lowerMethod.includes('credit') || lowerMethod.includes('credito')) {
     return <CreditCard className="w-4 h-4" />;
   } else if (lowerMethod.includes('boleto')) {
     return <Receipt className="w-4 h-4" />;
@@ -83,13 +83,17 @@ export const getPaymentIcon = (method: string) => {
 export const getPaymentLabel = (method: string) => {
   const lowerMethod = method.toLowerCase();
   
+  console.log('🔍 Analisando método de pagamento:', method, 'normalizado:', lowerMethod);
+  
   if (lowerMethod.includes('pix')) {
     return 'PIX';
-  } else if (lowerMethod.includes('card') || lowerMethod.includes('cartao') || lowerMethod.includes('credit')) {
-    return 'Cartão';
+  } else if (lowerMethod === 'cartao_credito' || lowerMethod.includes('cartao') || lowerMethod.includes('card') || lowerMethod.includes('credit') || lowerMethod.includes('credito')) {
+    return 'Cartão de Crédito';
+  } else if (lowerMethod === 'cartao_debito' || lowerMethod.includes('debit') || lowerMethod.includes('debito')) {
+    return 'Cartão de Débito';
   } else if (lowerMethod.includes('boleto')) {
     return 'Boleto';
   } else {
-    return method;
+    return 'Outros';
   }
 };

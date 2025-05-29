@@ -15,44 +15,64 @@ export function PaymentMethodChart({ selectedPeriod }: PaymentMethodChartProps) 
   const paymentData = useMemo(() => {
     if (!orders || orders.length === 0) return [];
 
-    // Agrupar pedidos por método de pagamento
+    console.log('💳 Analisando métodos de pagamento dos pedidos:', orders.length);
+
+    // Agrupar pedidos por método de pagamento com lógica melhorada
     const paymentGroups = orders.reduce((acc, order) => {
-      const method = order.payment_method.toLowerCase();
+      const method = (order.payment_method || '').toLowerCase();
+      console.log(`🔍 Pedido ${order.external_id} - Método bruto: "${order.payment_method}" - Normalizado: "${method}"`);
+      
       let category = 'Outros';
       
       if (method.includes('pix')) {
         category = 'PIX';
-      } else if (method.includes('card') || method.includes('cartao') || method.includes('credit') || method.includes('debit')) {
-        category = 'Cartão';
+      } else if (method === 'cartao_credito' || method.includes('cartao') || method.includes('card') || method.includes('credit') || method.includes('credito')) {
+        category = 'Cartão de Crédito';
+      } else if (method === 'cartao_debito' || method.includes('debit') || method.includes('debito')) {
+        category = 'Cartão de Débito';
       } else if (method.includes('boleto')) {
         category = 'Boleto';
       }
+
+      console.log(`✅ Método "${order.payment_method}" categorizado como: "${category}"`);
 
       if (!acc[category]) {
         acc[category] = { count: 0, amount: 0 };
       }
       
       acc[category].count += 1;
-      acc[category].amount += Number(order.amount);
+      
+      // Corrigir valor se estiver em centavos
+      const amount = Number(order.amount) || 0;
+      const correctedAmount = (Number.isInteger(amount) && amount >= 1000) ? amount / 100 : amount;
+      acc[category].amount += correctedAmount;
       
       return acc;
     }, {} as Record<string, { count: number; amount: number }>);
+
+    console.log('📊 Grupos de pagamento calculados:', paymentGroups);
 
     // Converter para formato do gráfico
     const total = orders.length;
     const colors = {
       'PIX': '#ff6b35',
-      'Cartão': '#00d4ff',
+      'Cartão de Crédito': '#00d4ff',
+      'Cartão de Débito': '#4f46e5',
       'Boleto': '#ffd23f',
       'Outros': '#9ca3af'
     };
 
-    return Object.entries(paymentGroups).map(([method, data]) => ({
+    const result = Object.entries(paymentGroups).map(([method, data]) => ({
       name: method,
       value: Math.round((data.count / total) * 100),
+      count: data.count,
       amount: data.amount,
       color: colors[method as keyof typeof colors] || colors.Outros
     })).sort((a, b) => b.value - a.value);
+
+    console.log('📈 Dados finais do gráfico:', result);
+
+    return result;
   }, [orders]);
 
   const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: any[] }) => {
@@ -61,8 +81,8 @@ export function PaymentMethodChart({ selectedPeriod }: PaymentMethodChartProps) 
       return (
         <div className="bg-gray-900 border border-gray-700 p-3 rounded-lg shadow-lg">
           <p className="font-medium text-white">{data.name}</p>
-          <p className="text-sm text-gray-400">{data.value}% das vendas</p>
-          <p className="text-sm text-orange-400 font-medium">R$ {data.amount.toLocaleString('pt-BR')}</p>
+          <p className="text-sm text-gray-400">{data.value}% das vendas ({data.count} pedidos)</p>
+          <p className="text-sm text-orange-400 font-medium">R$ {data.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
         </div>
       );
     }
@@ -137,7 +157,9 @@ export function PaymentMethodChart({ selectedPeriod }: PaymentMethodChartProps) 
               </div>
               <div className="text-right">
                 <div className="text-sm font-semibold text-white">{item.value}%</div>
-                <div className="text-xs text-gray-400">R$ {item.amount.toLocaleString('pt-BR')}</div>
+                <div className="text-xs text-gray-400">
+                  {item.count} pedidos - R$ {item.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </div>
               </div>
             </div>
           ))}
