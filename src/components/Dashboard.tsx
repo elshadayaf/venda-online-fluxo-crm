@@ -7,7 +7,6 @@ import { HourlySalesChart } from "@/components/HourlySalesChart";
 import { PaymentMethodChart } from "@/components/PaymentMethodChart";
 import { RecentSales } from "@/components/RecentSales";
 import { FilterTabs } from "@/components/FilterTabs";
-import { DebugPanel } from "@/components/DebugPanel";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Bell, BellRing, BellOff, Volume2, VolumeX, LogOut, RefreshCw, Keyboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -182,11 +181,6 @@ export function Dashboard() {
       {/* Metric Cards com melhor responsividade e animação */}
       <div className="animate-fade-in">
         <MetricCards selectedPeriod={selectedPeriod} />
-      </div>
-
-      {/* Debug Panel */}
-      <div className="animate-fade-in">
-        <DebugPanel />
       </div>
 
       {/* Charts Grid com responsividade melhorada e animações */}
