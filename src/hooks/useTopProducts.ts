@@ -27,12 +27,15 @@ export const useTopProducts = (selectedPeriod: string) => {
     paidOrders.forEach(order => {
       try {
         // Tenta parsear os itens do pedido
-        let items = [];
+        let items: any[] = [];
         if (order.items) {
           if (typeof order.items === 'string') {
             items = JSON.parse(order.items);
-          } else {
+          } else if (Array.isArray(order.items)) {
             items = order.items;
+          } else {
+            // Handle other JSON types by converting to array
+            items = [order.items];
           }
         }
 
