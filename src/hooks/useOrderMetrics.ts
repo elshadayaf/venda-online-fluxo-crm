@@ -129,8 +129,16 @@ export const useOrderMetrics = (selectedPeriod: string) => {
       return sum + correctedPaidAmount;
     }, 0);
 
-    const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+    // MUDANÇA PRINCIPAL: Ticket médio agora baseado apenas em vendas pagas
+    const averageOrderValue = paidOrders > 0 ? paidRevenue / paidOrders : 0;
     const conversionRate = totalOrders > 0 ? (paidOrders / totalOrders) * 100 : 0;
+
+    console.log('🎯 CÁLCULO DO TICKET MÉDIO:', {
+      paidRevenue,
+      paidOrders,
+      averageOrderValue,
+      note: 'Agora calculado apenas com vendas pagas'
+    });
 
     const finalMetrics = {
       totalRevenue,
