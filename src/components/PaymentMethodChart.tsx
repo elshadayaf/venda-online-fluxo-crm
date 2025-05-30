@@ -4,6 +4,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { useOrders } from "@/hooks/useOrders";
 import { useMemo } from "react";
 import { Loader2 } from "lucide-react";
+import { isPaidStatus } from "@/utils/orderUtils";
 
 interface PaymentMethodChartProps {
   selectedPeriod: string;
@@ -15,12 +16,17 @@ export function PaymentMethodChart({ selectedPeriod }: PaymentMethodChartProps) 
   const paymentData = useMemo(() => {
     if (!orders || orders.length === 0) return [];
 
-    console.log('💳 Analisando métodos de pagamento dos pedidos:', orders.length);
+    // Filtrar apenas pedidos pagos
+    const paidOrders = orders.filter(order => isPaidStatus(order.status));
+    
+    console.log('💳 Analisando métodos de pagamento dos PEDIDOS PAGOS:', paidOrders.length, 'de', orders.length, 'total');
 
-    // Agrupar pedidos por método de pagamento com lógica melhorada
-    const paymentGroups = orders.reduce((acc, order) => {
+    if (paidOrders.length === 0) return [];
+
+    // Agrupar pedidos pagos por método de pagamento
+    const paymentGroups = paidOrders.reduce((acc, order) => {
       const method = (order.payment_method || '').toLowerCase();
-      console.log(`🔍 Pedido ${order.external_id} - Método bruto: "${order.payment_method}" - Normalizado: "${method}"`);
+      console.log(`🔍 Pedido PAGO ${order.external_id} - Método bruto: "${order.payment_method}" - Normalizado: "${method}"`);
       
       let category = 'Outros';
       
@@ -50,10 +56,10 @@ export function PaymentMethodChart({ selectedPeriod }: PaymentMethodChartProps) 
       return acc;
     }, {} as Record<string, { count: number; amount: number }>);
 
-    console.log('📊 Grupos de pagamento calculados:', paymentGroups);
+    console.log('📊 Grupos de pagamento calculados (apenas pagos):', paymentGroups);
 
     // Converter para formato do gráfico
-    const total = orders.length;
+    const total = paidOrders.length;
     const colors = {
       'PIX': '#ff6b35',
       'Cartão de Crédito': '#00d4ff',
@@ -70,7 +76,7 @@ export function PaymentMethodChart({ selectedPeriod }: PaymentMethodChartProps) 
       color: colors[method as keyof typeof colors] || colors.Outros
     })).sort((a, b) => b.value - a.value);
 
-    console.log('📈 Dados finais do gráfico:', result);
+    console.log('📈 Dados finais do gráfico (apenas pagos):', result);
 
     return result;
   }, [orders]);
@@ -81,7 +87,7 @@ export function PaymentMethodChart({ selectedPeriod }: PaymentMethodChartProps) 
       return (
         <div className="bg-gray-900 border border-gray-700 p-3 rounded-lg shadow-lg">
           <p className="font-medium text-white">{data.name}</p>
-          <p className="text-sm text-gray-400">{data.value}% das vendas ({data.count} pedidos)</p>
+          <p className="text-sm text-gray-400">{data.value}% das vendas pagas ({data.count} pedidos)</p>
           <p className="text-sm text-orange-400 font-medium">R$ {data.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
         </div>
       );
@@ -93,7 +99,7 @@ export function PaymentMethodChart({ selectedPeriod }: PaymentMethodChartProps) 
     return (
       <Card className="bg-gray-900 border-gray-800">
         <CardHeader>
-          <CardTitle className="text-white">Métodos de Pagamento</CardTitle>
+          <CardTitle className="text-white">Métodos de Pagamento (Vendas Pagas)</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center h-[300px]">
@@ -109,11 +115,11 @@ export function PaymentMethodChart({ selectedPeriod }: PaymentMethodChartProps) 
     return (
       <Card className="bg-gray-900 border-gray-800">
         <CardHeader>
-          <CardTitle className="text-white">Métodos de Pagamento</CardTitle>
+          <CardTitle className="text-white">Métodos de Pagamento (Vendas Pagas)</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center h-[300px]">
-            <span className="text-gray-400">Nenhum dado disponível</span>
+            <span className="text-gray-400">Nenhum pedido pago encontrado</span>
           </div>
         </CardContent>
       </Card>
@@ -123,7 +129,7 @@ export function PaymentMethodChart({ selectedPeriod }: PaymentMethodChartProps) 
   return (
     <Card className="bg-gray-900 border-gray-800">
       <CardHeader>
-        <CardTitle className="text-white">Métodos de Pagamento</CardTitle>
+        <CardTitle className="text-white">Métodos de Pagamento (Vendas Pagas)</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
@@ -158,7 +164,7 @@ export function PaymentMethodChart({ selectedPeriod }: PaymentMethodChartProps) 
               <div className="text-right">
                 <div className="text-sm font-semibold text-white">{item.value}%</div>
                 <div className="text-xs text-gray-400">
-                  {item.count} pedidos - R$ {item.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {item.count} pedidos pagos - R$ {item.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
               </div>
             </div>
