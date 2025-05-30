@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useOrders } from "@/hooks/useOrders";
 import { useMemo } from "react";
-import { format, subDays, startOfDay, endOfDay, startOfHour, endOfHour, eachHourOfInterval, eachDayOfInterval, eachWeekOfInterval, startOfWeek, endOfWeek } from "date-fns";
+import { format, subDays, startOfDay, endOfDay, eachDayOfInterval, startOfMonth, endOfMonth, getDaysInMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Loader2 } from "lucide-react";
 
@@ -20,13 +20,11 @@ export function SalesChart({ selectedPeriod }: SalesChartProps) {
     const now = new Date();
     
     switch (selectedPeriod) {
-      case 'today':
-      case 'yesterday': {
-        const referenceDate = selectedPeriod === 'today' ? now : subDays(now, 1);
-        const dayStart = startOfDay(referenceDate);
-        const dayEnd = endOfDay(referenceDate);
+      case 'today': {
+        const dayStart = startOfDay(now);
+        const dayEnd = endOfDay(now);
         
-        // Gerar intervalos de 3 horas
+        // Para hoje, mostrar por horas (mantendo o comportamento original)
         const intervals = [];
         for (let hour = 0; hour < 24; hour += 3) {
           const intervalStart = new Date(dayStart);
@@ -43,7 +41,47 @@ export function SalesChart({ selectedPeriod }: SalesChartProps) {
           });
 
           const vendas = ordersInInterval.length;
-          const faturamento = ordersInInterval.reduce((sum, order) => sum + Number(order.amount), 0);
+          const faturamento = ordersInInterval.reduce((sum, order) => {
+            const amount = Number(order.amount) || 0;
+            const correctedAmount = (Number.isInteger(amount) && amount >= 1000) ? amount / 100 : amount;
+            return sum + correctedAmount;
+          }, 0);
+
+          return {
+            time: interval.label,
+            vendas,
+            faturamento
+          };
+        });
+      }
+
+      case 'yesterday': {
+        const yesterday = subDays(now, 1);
+        const dayStart = startOfDay(yesterday);
+        const dayEnd = endOfDay(yesterday);
+        
+        // Para ontem, mostrar por horas
+        const intervals = [];
+        for (let hour = 0; hour < 24; hour += 3) {
+          const intervalStart = new Date(dayStart);
+          intervalStart.setHours(hour);
+          const intervalEnd = new Date(dayStart);
+          intervalEnd.setHours(hour + 3);
+          intervals.push({ start: intervalStart, end: intervalEnd, label: `${hour.toString().padStart(2, '0')}h` });
+        }
+
+        return intervals.map(interval => {
+          const ordersInInterval = orders.filter(order => {
+            const orderDate = new Date(order.created_at);
+            return orderDate >= interval.start && orderDate < interval.end;
+          });
+
+          const vendas = ordersInInterval.length;
+          const faturamento = ordersInInterval.reduce((sum, order) => {
+            const amount = Number(order.amount) || 0;
+            const correctedAmount = (Number.isInteger(amount) && amount >= 1000) ? amount / 100 : amount;
+            return sum + correctedAmount;
+          }, 0);
 
           return {
             time: interval.label,
@@ -54,6 +92,7 @@ export function SalesChart({ selectedPeriod }: SalesChartProps) {
       }
 
       case '7days': {
+        // Para 7 dias, mostrar por dias
         const days = eachDayOfInterval({
           start: subDays(now, 6),
           end: now
@@ -69,10 +108,14 @@ export function SalesChart({ selectedPeriod }: SalesChartProps) {
           });
 
           const vendas = ordersInDay.length;
-          const faturamento = ordersInDay.reduce((sum, order) => sum + Number(order.amount), 0);
+          const faturamento = ordersInDay.reduce((sum, order) => {
+            const amount = Number(order.amount) || 0;
+            const correctedAmount = (Number.isInteger(amount) && amount >= 1000) ? amount / 100 : amount;
+            return sum + correctedAmount;
+          }, 0);
 
           return {
-            time: format(day, 'EEE', { locale: ptBR }),
+            time: format(day, 'dd/MM', { locale: ptBR }),
             vendas,
             faturamento
           };
@@ -80,24 +123,36 @@ export function SalesChart({ selectedPeriod }: SalesChartProps) {
       }
 
       case 'month': {
-        const weeks = eachWeekOfInterval({
-          start: subDays(now, 28),
-          end: now
-        }, { weekStartsOn: 1 });
+        // Para o mês, mostrar por dias do mês
+        const monthStart = startOfMonth(now);
+        const monthEnd = endOfMonth(now);
+        const daysInMonth = getDaysInMonth(now);
+        
+        // Criar array com todos os dias do mês
+        const days = [];
+        for (let day = 1; day <= daysInMonth; day++) {
+          const currentDay = new Date(now.getFullYear(), now.getMonth(), day);
+          days.push(currentDay);
+        }
 
-        return weeks.map((weekStart, index) => {
-          const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
+        return days.map(day => {
+          const dayStart = startOfDay(day);
+          const dayEnd = endOfDay(day);
           
-          const ordersInWeek = orders.filter(order => {
+          const ordersInDay = orders.filter(order => {
             const orderDate = new Date(order.created_at);
-            return orderDate >= weekStart && orderDate <= weekEnd;
+            return orderDate >= dayStart && orderDate <= dayEnd;
           });
 
-          const vendas = ordersInWeek.length;
-          const faturamento = ordersInWeek.reduce((sum, order) => sum + Number(order.amount), 0);
+          const vendas = ordersInDay.length;
+          const faturamento = ordersInDay.reduce((sum, order) => {
+            const amount = Number(order.amount) || 0;
+            const correctedAmount = (Number.isInteger(amount) && amount >= 1000) ? amount / 100 : amount;
+            return sum + correctedAmount;
+          }, 0);
 
           return {
-            time: `Sem ${index + 1}`,
+            time: format(day, 'dd', { locale: ptBR }),
             vendas,
             faturamento
           };
