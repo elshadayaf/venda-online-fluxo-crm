@@ -14,6 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useRefresh } from "@/contexts/RefreshContext";
+import { TopProductsCard } from "@/components/TopProductsCard";
 
 export function Dashboard() {
   const [selectedPeriod, setSelectedPeriod] = useState("today");
@@ -125,10 +126,13 @@ export function Dashboard() {
         <div className="animate-fade-in hover:scale-[1.02] transition-transform duration-300" style={{ animationDelay: '0.2s' }}>
           <PaymentMethodChart selectedPeriod={selectedPeriod} />
         </div>
+        <div className="animate-fade-in hover:scale-[1.02] transition-transform duration-300" style={{ animationDelay: '0.3s' }}>
+          <TopProductsCard selectedPeriod={selectedPeriod} />
+        </div>
       </div>
 
       {/* Recent Sales com animação */}
-      <div className="animate-fade-in hover:scale-[1.01] transition-transform duration-300" style={{ animationDelay: '0.3s' }}>
+      <div className="animate-fade-in hover:scale-[1.01] transition-transform duration-300" style={{ animationDelay: '0.4s' }}>
         <RecentSales />
       </div>
     </div>

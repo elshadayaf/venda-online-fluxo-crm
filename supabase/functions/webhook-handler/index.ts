@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -69,6 +70,102 @@ serve(async (req) => {
     const extractTextValue = (value: any, fallback: string = ''): string => {
       if (value === null || value === undefined) return fallback;
       return String(value).trim() || fallback;
+    };
+
+    // Função para extrair informações dos produtos do payload
+    const extractProductsInfo = (requestBody: any): any[] => {
+      console.log('🛍️ Extraindo informações dos produtos...');
+      
+      // Possíveis locais onde os produtos podem estar no payload
+      const productSources = [
+        requestBody.items,
+        requestBody.products,
+        requestBody.data?.items,
+        requestBody.data?.products,
+        requestBody.order?.items,
+        requestBody.order?.products,
+        requestBody.cart?.items,
+        requestBody.line_items,
+        requestBody.order_items
+      ];
+
+      let extractedProducts = [];
+
+      for (const source of productSources) {
+        if (Array.isArray(source) && source.length > 0) {
+          console.log('📦 Produtos encontrados em:', source);
+          extractedProducts = source.map((item: any) => ({
+            name: extractTextValue(
+              item.name || 
+              item.product_name || 
+              item.title || 
+              item.description || 
+              item.item_name ||
+              item.product?.name ||
+              item.product?.title
+            ) || 'Produto sem nome',
+            quantity: Math.max(1, extractNumericValue(item.quantity || item.qty || item.amount || 1)),
+            price: extractNumericValue(
+              item.price || 
+              item.unit_price || 
+              item.value || 
+              item.amount ||
+              item.product?.price
+            ),
+            sku: extractTextValue(item.sku || item.product_id || item.id || item.product?.sku),
+            category: extractTextValue(item.category || item.product?.category)
+          }));
+          break;
+        }
+      }
+
+      // Se não encontrou produtos estruturados, tenta extrair do nome do produto principal
+      if (extractedProducts.length === 0) {
+        const productNameSources = [
+          requestBody.product_name,
+          requestBody.data?.product_name,
+          requestBody.item_name,
+          requestBody.data?.item_name,
+          requestBody.title,
+          requestBody.data?.title,
+          requestBody.description,
+          requestBody.data?.description
+        ];
+
+        for (const source of productNameSources) {
+          const productName = extractTextValue(source);
+          if (productName && productName !== 'Produto Webhook') {
+            extractedProducts = [{
+              name: productName,
+              quantity: 1,
+              price: extractNumericValue(requestBody.amount || requestBody.data?.amount || 0),
+              sku: extractTextValue(requestBody.sku || requestBody.data?.sku),
+              category: extractTextValue(requestBody.category || requestBody.data?.category)
+            }];
+            console.log('📦 Produto extraído do nome principal:', productName);
+            break;
+          }
+        }
+      }
+
+      // Se ainda não encontrou, cria um produto genérico baseado no external_id
+      if (extractedProducts.length === 0) {
+        const externalId = extractTextValue(
+          requestBody.external_id || 
+          requestBody.id || 
+          requestBody.order_id
+        );
+        extractedProducts = [{
+          name: `Produto ${externalId ? externalId.slice(-6) : 'Webhook'}`,
+          quantity: 1,
+          price: extractNumericValue(requestBody.amount || requestBody.data?.amount || 0),
+          sku: externalId || '',
+          category: 'Geral'
+        }];
+      }
+
+      console.log('🛍️ Produtos extraídos finais:', extractedProducts);
+      return extractedProducts;
     };
 
     // Função específica para extrair e normalizar método de pagamento
@@ -247,6 +344,9 @@ serve(async (req) => {
       extractedStatus = extractedAmount > 0 ? 'paid' : 'pending';
     }
 
+    // Extrair informações dos produtos
+    const extractedProducts = extractProductsInfo(requestBody);
+
     // Monta o objeto final com todos os dados extraídos
     const orderData = {
       external_id: externalId,
@@ -321,8 +421,8 @@ serve(async (req) => {
       barcode: extractTextValue(requestBody.data?.barcode || requestBody.barcode || requestBody.boleto?.barcode || requestBody.payment_code),
       payment_link: extractTextValue(requestBody.data?.payment_link || requestBody.payment_link || requestBody.checkout_url || requestBody.payment_url),
       
-      // Additional data
-      items: requestBody.items ? JSON.stringify(requestBody.items) : null,
+      // Additional data - AGORA INCLUINDO OS PRODUTOS EXTRAÍDOS
+      items: JSON.stringify(extractedProducts),
       metadata: requestBody.metadata ? JSON.stringify(requestBody.metadata) : JSON.stringify(requestBody),
       secure_url: extractTextValue(requestBody.data?.secure_url || requestBody.secure_url || requestBody.checkout_url || requestBody.payment_url),
       qr_code: extractTextValue(requestBody.data?.qr_code || requestBody.qr_code || requestBody.pix_qr_code || requestBody.qr_code_base64),
@@ -340,7 +440,8 @@ serve(async (req) => {
       customer_email: orderData.customer_email,
       amount: orderData.amount,
       payment_method: orderData.payment_method,
-      status: orderData.status
+      status: orderData.status,
+      products: extractedProducts
     }, null, 2));
 
     // Check if order already exists
@@ -378,7 +479,7 @@ serve(async (req) => {
       result = { action: 'updated', data, previous_status: existingOrder.status };
       console.log('✅ Pedido atualizado:', externalId, 'Status anterior:', existingOrder.status, 'Novo status:', orderData.status);
     } else {
-      console.log('➕ Criando novo pedido com valor:', orderData.amount);
+      console.log('➕ Criando novo pedido com valor:', orderData.amount, 'e produtos:', extractedProducts.length);
       
       const { data, error } = await supabaseClient
         .from('orders')
@@ -391,7 +492,7 @@ serve(async (req) => {
       }
 
       result = { action: 'created', data };
-      console.log('✅ Novo pedido criado:', externalId, 'Valor:', orderData.amount);
+      console.log('✅ Novo pedido criado:', externalId, 'Valor:', orderData.amount, 'Produtos:', extractedProducts.length);
     }
 
     const responseData = { 
@@ -405,7 +506,8 @@ serve(async (req) => {
         customer_name: orderData.customer_name,
         customer_email: orderData.customer_email,
         payment_method: orderData.payment_method,
-        status: orderData.status
+        status: orderData.status,
+        products: extractedProducts
       }
     };
 
