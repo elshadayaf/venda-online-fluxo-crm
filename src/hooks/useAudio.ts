@@ -8,8 +8,8 @@ export function useAudio() {
     if (!isSoundEnabled) return;
 
     try {
-      // Usar o arquivo MP3 personalizado fornecido pelo usuário
-      const audio = new Audio('https://logitrackexpress.online/wp-content/uploads/2025/05/vendaaprovada.mp3');
+      // Usar o novo arquivo MP3 fornecido pelo usuário
+      const audio = new Audio('https://loggitransportadora.site/venda.mp3');
       audio.volume = 0.5; // Volume ajustável (50%)
       
       // Tocar o som
